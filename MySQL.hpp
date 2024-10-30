@@ -66,12 +66,12 @@ public:
     }
 
     // 执行mysql语句
-    static bool MySQL_Execute(const std::string &sql)
+    static bool MySQL_Execute(MYSQL* mysql, const std::string &sql)
     {
-        int ret = mysql_query(_mysql, sql.c_str());
+        int ret = mysql_query(mysql, sql.c_str());
         if (ret != 0)
         {
-            logMessage(ERROR, "execute error: %s\n", mysql_error(_mysql));
+            logMessage(ERROR, "execute error: %s\n", mysql_error(mysql));
             return false;
         }
         return true;
