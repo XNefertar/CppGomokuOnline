@@ -10,10 +10,10 @@
 #include <mysql/mysql.h>
 #include "Log.hpp"
 
-#define HOST "127.0.0.1"
-#define USER "root"
-#define PASSWD "XMysql12345"
-#define DBNAME "test_db"
+#define HOST    "127.0.0.1"
+#define USER    "root"
+#define PASSWD  "XMysql12345"
+#define DBNAME  "test_db"
 
 using namespace LOG_MSG;
 
