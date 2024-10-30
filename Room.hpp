@@ -272,6 +272,46 @@ public:
         }
     }
 
+    void HandlerRequest(Json::Value &req)
+    {
+        Json::Value resp;
+        uint64_t RoomID = req["RoomID"].asUInt64();
+        // 判断房间ID是否合法
+        if(RoomID != _RoomId)
+        {
+            resp["OpType"] = req["OpType"];
+            resp["Result"] = "false";
+            resp["Reason"] = "RoomID is error";
+            return BroadCast(resp);
+        }
+
+
+        std::string OpType = req["OpType"].asString();
+        if(OpType == "PutChess")
+        {
+            resp = HandlerChess(req);
+            if(resp["Result"] == "true")
+            {
+                _Status = GAME_OVER;
+                _WinnerId = resp["Winner"].asUInt64();
+                _UserTable->UpdateWinUser(_WinnerId);
+                _UserTable->UpdateLoseUser(_WinnerId == _WhiteId ? _BlackId : _WhiteId);
+                _Status = GAME_OVER;
+            }
+        }
+        else if(OpType == "Chat")
+        {
+            resp = HandlerChat(req);
+        }
+        else
+        {
+            resp["Result"] = "false";
+            resp["Reason"] = "Unknown operation";
+        }
+        BroadCast(resp);
+    }
+
+
 };
 
 #endif // _ROOM_HPP_
