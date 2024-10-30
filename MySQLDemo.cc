@@ -138,7 +138,6 @@ int main()
     }
     printf("select db success\n");
 
-    int ret = 0;
     // 5. 执行sql语句
     add(mysql);
     mod(mysql);
