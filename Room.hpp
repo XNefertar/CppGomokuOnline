@@ -135,12 +135,51 @@ public:
     // 处理下棋动作
     Json::Value HandlerChess(Json::Value &req)
     {
+        Json::Value resp = req;
+        int row = req["row"].asInt();
+        int col = req["col"].asInt();
+        uint16_t CurID = req["id"].asInt();
+        // 判断玩家是否在线
+        if(!_OnlineUser->IsInGameRoom(_WhiteId))
+        {
+            resp["Result"] = "true";
+            resp["Reason"] = "white player is offline";
+            resp["Winner"] = (Json::Value::UInt64)_BlackId;
+            return resp;
+        }
+        if(!_OnlineUser->IsInGameRoom(_BlackId))
+        {
+            resp["Result"] = "true";
+            resp["Reason"] = "black player is offline";
+            resp["Winner"] = (Json::Value::UInt64)_WhiteId;
+            return resp;
+        }
 
+        // 判断当前玩家下棋位置的合法性
+        if(_Board[row][col] != -1)
+        {
+            resp["Result"] = "false";
+            resp["Reason"] = "this position has been occupied";
+            return resp;
+        }
+
+        // 将当前位置置为对应的颜色
+        int cur_color = CurID == _WhiteId ? CHESS_WHITE_COLOR : CHESS_BLACK_COLOR;
+        _Board[row][col] = cur_color;
+
+        // 判断是否有玩家胜利
+        uint16_t WinnerID = CheckWin(row, col, cur_color);
+        if(WinnerID != -1)
+        {
+            resp["Result"] = "true";
+        }
+        resp["Reason"] = "Win";
+        resp["Winner"] = (Json::Value::UInt64)WinnerID;
+        return resp;
     }
 
+    
+
 };
-
-
-
 
 #endif // _ROOM_HPP_
