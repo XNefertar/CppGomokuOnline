@@ -11,6 +11,7 @@
 #include <jsoncpp/json/json.h>
 #include "Log.hpp"
 #include "JsonCpp.hpp"
+#include "UserTable.hpp"
 #include "OnlineManage.hpp"
 
 #define ROOM_MAX_NUM         5
@@ -39,7 +40,7 @@ private:
     uint16_t     _BlackId;           // 黑棋玩家ID
     uint16_t     _WinnerId;          // 胜利玩家ID
     std::mutex   _Mutex;             // 互斥锁
-    user_table   *_UserTable;        // 用户列表  TODO 未实现 MySQL
+    UserTable   *_UserTable;        // 用户列表  TODO 未实现 MySQL
     OnlineManage *_OnlineUser;       // 在线管理类
 
     std::vector<std::vector<int>> _Board; // 棋盘
@@ -89,7 +90,7 @@ public:
 
     // 初始化棋盘
 public:
-    Room(uint64_t RoomId, user_table *UserTable, OnlineManage *OnlineUser)
+    Room(uint64_t RoomId, UserTable *UserTable, OnlineManage *OnlineUser)
         : _RoomId(RoomId),
           _Status(GAME_START),
           _WhiteId(CHESS_WHITE_COLOR),
@@ -132,7 +133,10 @@ public:
     }
 
     // 处理下棋动作
-    
+    Json::Value HandlerChess(Json::Value &req)
+    {
+
+    }
 
 };
 
