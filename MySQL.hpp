@@ -8,7 +8,7 @@
 #include <cstring>
 #include <string>
 #include <mysql/mysql.h>
-#include "log.hpp"
+#include "Log.hpp"
 
 #define HOST "127.0.0.1"
 #define USER "root"
