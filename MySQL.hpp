@@ -15,6 +15,8 @@
 #define PASSWD "XMysql12345"
 #define DBNAME "test_db"
 
+using namespace LOG_MSG;
+
 class MySQL
 {
 public:
@@ -28,28 +30,28 @@ public:
         if (mysql == NULL)
         {
             // std::cerr << "MySQL init error" << std::endl;
-            logMessage(ERROR, "MySQL init error");
+            Log::LogMessage(ERROR, "MySQL init error");
             return NULL;
         }
 
         // 2. 连接mysql服务器
         if (mysql_real_connect(mysql, HOST, USER, PASSWD, DBNAME, 0, NULL, 0) == NULL)
         {
-            logMessage(ERROR, "connect mysql server error: %s\n", mysql_error(mysql));
+            Log::LogMessage(ERROR, "connect mysql server error: %s\n", mysql_error(mysql));
             return NULL;
         }
 
         // 3. 设置字符集
         if (mysql_set_character_set(mysql, "utf8") != 0)
         {
-            logMessage(ERROR, "set character error: %s\n", mysql_error(mysql));
+            Log::LogMessage(ERROR, "set character error: %s\n", mysql_error(mysql));
             return NULL;
         }
 
         // 4. 选择数据库
         if (mysql_select_db(mysql, DBNAME) != 0)
         {
-            logMessage(ERROR, "select db error: %s\n", mysql_error(mysql));
+            Log::LogMessage(ERROR, "select db error: %s\n", mysql_error(mysql));
             return NULL;
         }
         return mysql;
@@ -71,7 +73,7 @@ public:
         int ret = mysql_query(mysql, sql.c_str());
         if (ret != 0)
         {
-            logMessage(ERROR, "execute error: %s\n", mysql_error(mysql));
+            Log::LogMessage(ERROR, "execute error: %s\n", mysql_error(mysql));
             return false;
         }
         return true;
