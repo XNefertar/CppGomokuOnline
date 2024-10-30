@@ -21,12 +21,15 @@
 #define CHESS_WHITE_COLOR    0
 #define CHESS_BLACK_COLOR    1
 
+
 using namespace LOG_MSG;
 typedef enum
 {
     GAME_START = 0,
     GAME_OVER,
 }RoomStatus;
+typedef websocketpp::server<websocketpp::config::asio> webserver;
+typedef webserver::message_ptr message_ptr;
 
 // 封装房间管理类
 // 房间内包含棋局对战和聊天室
@@ -34,13 +37,13 @@ class Room
 {
 private:
     int          _PlayerNum;         // 玩家数量
-    uint16_t     _RoomId;            // 房间ID
+    uint64_t     _RoomId;            // 房间ID
     RoomStatus   _Status;            // 房间状态
-    uint16_t     _WhiteId;           // 白棋玩家ID
-    uint16_t     _BlackId;           // 黑棋玩家ID
-    uint16_t     _WinnerId;          // 胜利玩家ID
+    uint64_t     _WhiteId;           // 白棋玩家ID
+    uint64_t     _BlackId;           // 黑棋玩家ID
+    uint64_t     _WinnerId;          // 胜利玩家ID
     std::mutex   _Mutex;             // 互斥锁
-    UserTable   *_UserTable;        // 用户列表  TODO 未实现 MySQL
+    UserTable   *_UserTable;        // 用户列表
     OnlineManage *_OnlineUser;       // 在线管理类
 
     std::vector<std::vector<int>> _Board; // 棋盘
@@ -75,7 +78,7 @@ public:
     }
 
     // 判断是否胜利
-    uint16_t CheckWin(int row, int col, int color)
+    uint64_t CheckWin(int row, int col, int color)
     {
         // 判断各个方向是否出现五子连珠
         if (five(row, col, 0, 1, color) ||
@@ -113,19 +116,19 @@ public:
     // 一系列函数接口用于获取信息
     int         GetPlayerNum() { return _PlayerNum; }
     RoomStatus  GetStatus()    { return _Status; }
-    uint16_t    GetRoomId()    { return _RoomId; }
-    uint16_t    GetWhiteId()   { return _WhiteId; }
-    uint16_t    GetBlackId()   { return _BlackId; }
-    uint16_t    GetWinnerId()  { return _WinnerId; }
+    uint64_t    GetRoomId()    { return _RoomId; }
+    uint64_t    GetWhiteId()   { return _WhiteId; }
+    uint64_t    GetBlackId()   { return _BlackId; }
+    uint64_t    GetWinnerId()  { return _WinnerId; }
 
     // 一系列函数接口用于设置信息
-    void AddBlakcPlayer(uint16_t id)
+    void AddBlakcPlayer(uint64_t id)
     {
         std::lock_guard<std::mutex> lock(_Mutex);
         _BlackId = id;
         _PlayerNum++;
     }
-    void AddWhitePlayer(uint16_t id)
+    void AddWhitePlayer(uint64_t id)
     {
         std::lock_guard<std::mutex> lock(_Mutex);
         _WhiteId = id;
@@ -138,20 +141,20 @@ public:
         Json::Value resp = req;
         int row = req["row"].asInt();
         int col = req["col"].asInt();
-        uint16_t CurID = req["id"].asInt();
+        uint64_t CurID = req["id"].asInt();
         // 判断玩家是否在线
         if(!_OnlineUser->IsInGameRoom(_WhiteId))
         {
             resp["Result"] = "true";
             resp["Reason"] = "white player is offline";
-            resp["Winner"] = (Json::Value::UInt64)_BlackId;
+            resp["Winner"] = (Json::UInt64)_BlackId;
             return resp;
         }
         if(!_OnlineUser->IsInGameRoom(_BlackId))
         {
             resp["Result"] = "true";
             resp["Reason"] = "black player is offline";
-            resp["Winner"] = (Json::Value::UInt64)_WhiteId;
+            resp["Winner"] = (Json::UInt64)_WhiteId;
             return resp;
         }
 
@@ -168,13 +171,13 @@ public:
         _Board[row][col] = cur_color;
 
         // 判断是否有玩家胜利
-        uint16_t WinnerID = CheckWin(row, col, cur_color);
+        uint64_t WinnerID = CheckWin(row, col, cur_color);
         if(WinnerID != -1)
         {
             resp["Result"] = "true";
         }
         resp["Reason"] = "Win";
-        resp["Winner"] = (Json::Value::UInt64)WinnerID;
+        resp["Winner"] = (Json::UInt64)WinnerID;
         return resp;
     }
 
@@ -182,7 +185,7 @@ public:
     Json::Value HandlerChat(Json::Value &req)
     {
         Json::Value resp = req;
-        uint16_t CurID = req["id"].asInt();
+        uint64_t CurID = req["id"].asInt();
         std::string msg = req["msg"].asString();
         // 判断玩家是否在线
         if(!_OnlineUser->IsInGameRoom(_WhiteId))
@@ -211,7 +214,63 @@ public:
         resp["Reason"] = "Chat";
         return resp;
     }
-    
+
+    // 处理玩家退出情况
+    void HandlerQuit(uint64_t uid)
+    {
+        Json::Value resp;
+        if(_Status == GAME_START)
+        {
+            uint64_t WinnerID = (Json::UInt64)(uid == _WhiteId) ? _BlackId : _WhiteId;
+            resp["OpType"]    = "PutChess";
+            resp["Result"]    = true;
+            resp["Reason"]    = "The other party is offline";
+            resp["RoomID"]    = _RoomId;
+            resp["UID"]       = (Json::UInt64)(uid);
+            resp["row"]       = -1;
+            resp["col"]       = -1;
+            resp["Winner"]    = (Json::UInt64)WinnerID;
+            uint64_t LoserID  = (WinnerID == _WhiteId ? _BlackId : _WhiteId);
+            _UserTable->UpdateWinUser(WinnerID);
+            _UserTable->UpdateLoseUser(LoserID);
+
+            _Status = GAME_OVER;
+
+            // 通知双方玩家
+            BroadCast(resp);
+        }
+    }
+
+    // 广播消息
+    void BroadCast(Json::Value &resp)
+    {
+        // 1. 序列化
+        std::string str;
+        JsonCpp::serialize(resp, str);
+
+        // 2. 广播
+        wsserver_t::connection_ptr WebConPtrWhite;
+        _OnlineUser->GetGameRoomConnection(_WhiteId, WebConPtrWhite);
+        if(WebConPtrWhite != nullptr)
+        {
+            WebConPtrWhite->send(str);
+        }
+        else
+        {
+            Log::LogMessage(ERROR, "White player failed to send message");
+        }
+
+        wsserver_t::connection_ptr WebConPtrBlack;
+        _OnlineUser->GetGameRoomConnection(_BlackId, WebConPtrBlack);
+        if(WebConPtrBlack != nullptr)
+        {
+            WebConPtrBlack->send(str);
+        }
+        else
+        {
+            Log::LogMessage(ERROR, "Black player failed to send message");
+        }
+    }
 
 };
 
