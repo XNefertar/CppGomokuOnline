@@ -178,6 +178,39 @@ public:
         return resp;
     }
 
+    // 处理聊天动作
+    Json::Value HandlerChat(Json::Value &req)
+    {
+        Json::Value resp = req;
+        uint16_t CurID = req["id"].asInt();
+        std::string msg = req["msg"].asString();
+        // 判断玩家是否在线
+        if(!_OnlineUser->IsInGameRoom(_WhiteId))
+        {
+            resp["Result"] = "false";
+            resp["Reason"] = "white player is offline";
+            return resp;
+        }
+        if(!_OnlineUser->IsInGameRoom(_BlackId))
+        {
+            resp["Result"] = "false";
+            resp["Reason"] = "black player is offline";
+            return resp;
+        }
+
+        // 增加屏蔽词过滤
+        if(msg.find("shit") != std::string::npos)
+        {
+            resp["Result"] = false;
+            resp["Reason"] = "There are blocked words in the field, please edit again before sending.";
+            return resp;
+        }
+        
+        // 聊天信息广播
+        resp["Result"] = "true";
+        resp["Reason"] = "Chat";
+        return resp;
+    }
     
 
 };
