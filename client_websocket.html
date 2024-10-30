@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Websocket</title>
+</head>
+
+<body>
+    <input type="text" id="message" placeholder="Enter message">
+    <button onclick="send()">Send</button>
+    <script>
+        var ws = new WebSocket("ws://192.144.236.38:8888");
+
+        ws.onopen = function() {
+            console.log("Connected");
+        };
+
+        ws.onmessage = function(evt) {
+            console.log(evt.data);
+        };
+
+        let input = document.getElementById("message");
+        let button = document.querySelector("button");
+        button.onclick = function() {
+            ws.send(input.value);
+        };
+    </script>
+</body>
+
+</html>
