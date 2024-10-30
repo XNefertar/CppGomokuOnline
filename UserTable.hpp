@@ -163,14 +163,10 @@ public:
     // 胜利时更新用户信息
     // 天梯分数更新
     // 战斗和胜利次数更新
-    bool UpdateWinUser(Json::Value &user, uint16_t id)
+    bool UpdateWinUser(uint64_t id)
     {
         std::lock_guard<std::mutex> lock(_mutex);
-        if(user["id"].isNull() || user["password"].isNull())
-        {
-            Log::LogMessage(ERROR, "Update user error: id or password is empty");
-            return false;
-        }
+        
         char sql[USER_TABLE_MAX_SIZE]{};
         sprintf(sql, UPDATE_WIN_USER, id);
         if(!MySQL::MySQL_Execute(_mysql, sql))
@@ -181,14 +177,10 @@ public:
         return true;
     }
 
-    bool UpdateLoseUser(Json::Value &user, uint16_t id)
+    bool UpdateLoseUser(uint64_t id)
     {
         std::lock_guard<std::mutex> lock(_mutex);
-        if(user["id"].isNull() || user["password"].isNull())
-        {
-            Log::LogMessage(ERROR, "Update user error: id or password is empty");
-            return false;
-        }
+        
         char sql[USER_TABLE_MAX_SIZE]{};
         sprintf(sql, UPDATE_LOSE_USER, id);
         if(!MySQL::MySQL_Execute(_mysql, sql))

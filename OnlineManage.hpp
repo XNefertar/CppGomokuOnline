@@ -11,16 +11,18 @@
 #include <jsoncpp/json/json.h>
 #include "Log.hpp"
 
+typedef websocketpp::server<websocketpp::config::asio> wsserver_t;
+
 class OnlineManage
 {
 private:
-    std::unordered_map<uint16_t, websocketpp::connection_hdl> _GameHall;
-    std::unordered_map<uint16_t, websocketpp::connection_hdl> _GameRoom;
+    std::unordered_map<uint16_t, wsserver_t::connection_ptr> _GameHall;
+    std::unordered_map<uint16_t, wsserver_t::connection_ptr> _GameRoom;
     std::mutex _mutex;
 
 public:
     // 进入游戏大厅和游戏房间
-    void EnterGameHall(uint16_t id, websocketpp::connection_hdl hdl) {
+    void EnterGameHall(uint16_t id, wsserver_t::connection_ptr hdl) {
         std::lock_guard<std::mutex> lock(_mutex);
         _GameHall[id] = hdl;
     }
@@ -31,7 +33,7 @@ public:
 
 
     // 退出游戏大厅和游戏房间
-    void ExitGameHall(uint16_t id, websocketpp::connection_hdl hdl) {
+    void ExitGameHall(uint16_t id, wsserver_t::connection_ptr hdl) {
         std::lock_guard<std::mutex> lock(_mutex);
         _GameHall.erase(id);
     }
@@ -53,7 +55,7 @@ public:
 
 
     // 获取游戏大厅和游戏房间的连接
-    bool GetGameHallConnection(uint16_t id, websocketpp::connection_hdl& hdl) {
+    bool GetGameHallConnection(uint16_t id, wsserver_t::connection_ptr& hdl) {
         std::lock_guard<std::mutex> lock(_mutex);
         if(_GameHall.find(id) == _GameHall.end()) 
         {
@@ -62,7 +64,7 @@ public:
         hdl = _GameHall.at(id);
         return true;
     }
-    bool GetGameRoomConnection(uint16_t id, websocketpp::connection_hdl& hdl) {
+    bool GetGameRoomConnection(uint16_t id, wsserver_t::connection_ptr& hdl) {
         std::lock_guard<std::mutex> lock(_mutex);
         if(_GameRoom.find(id) == _GameRoom.end()) 
         {
