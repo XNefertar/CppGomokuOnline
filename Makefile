@@ -1,5 +1,8 @@
 .PHONY:all
-all:server jsoncpp
+all:server jsoncpp mysql
+
+mysql:MySQLDemo.cc
+	g++ -o $@ $^ -lmysqlclient -std=c++14
 
 jsoncpp:JsonCppDemo.cc
 	g++ -o $@ $^ -ljsoncpp -std=c++14
@@ -9,4 +12,4 @@ server:http_server.cc
 
 .PHONY:clean
 clean:
-	rm -rf server jsoncpp
+	rm -rf server jsoncpp mysql
