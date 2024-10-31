@@ -26,9 +26,9 @@ public:
         std::lock_guard<std::mutex> lock(_mutex);
         _GameHall[id] = hdl;
     }
-    void ExitGameHall(uint16_t id) {
+    void EnterGameRoom(uint16_t id) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _GameHall.erase(id);
+        GameRoom[id] = hdl;
     }
 
 
