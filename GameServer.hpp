@@ -20,13 +20,13 @@ using namespace LOG_MSG;
 class GameServer
 {
 private:
-    std::string     _WebRoot;
-    wsserver_t      _Server;
-    Matcher         _Matcher;
-    UserTable       _UserTable;
-    RoomManage      _RoomManage;
-    OnlineManage    _OnlineManage;
-    SessionManage   _SessionManage;
+    std::string _WebRoot;
+    wsserver_t _Server;
+    Matcher _Matcher;
+    UserTable _UserTable;
+    RoomManage _RoomManage;
+    OnlineManage _OnlineManage;
+    SessionManage _SessionManage;
 
 private:
     void HandlerFile(wsserver_t::connection_ptr con)
@@ -35,7 +35,7 @@ private:
         std::string URI = HttpRequst.get_uri();
         std::string FilePath = _WebRoot + URI;
 
-        if(FilePath.back() == '/')
+        if (FilePath.back() == '/')
         {
             FilePath += "login.html";
         }
@@ -45,7 +45,7 @@ private:
         // 读取失败
         // 返回404 Not Found
         // 返回格式为html
-        if(!FileRead::Read(FilePath, content))
+        if (!FileRead::Read(FilePath, content))
         {
             content += "<html><head><meta charset='UTF-8'/></head><body><h1>404 Not Found</h1></body></html>";
             con->set_status(websocketpp::http::status_code::not_found);
@@ -77,7 +77,7 @@ private:
         // 获取正文
         std::string content = HttpRequst.get_body();
         Json::Value LoginInfo;
-        if(!JsonCpp::deserialize(content, LoginInfo))
+        if (!JsonCpp::deserialize(content, LoginInfo))
         {
             Log::LogMessage(ERROR, "Deserialize error");
             HttpResp(con, false, websocketpp::http::status_code::bad_request, "Bad Request");
@@ -85,14 +85,14 @@ private:
         }
 
         // 向数据库插入用户
-        if(LoginInfo["username"].isNull() || LoginInfo["password"].isNull())
+        if (LoginInfo["username"].isNull() || LoginInfo["password"].isNull())
         {
             Log::LogMessage(ERROR, "Username or password is empty");
             HttpResp(con, false, websocketpp::http::status_code::bad_request, "请输入用户名或密码");
             return;
         }
 
-        if(!_UserTable.InsertUser(LoginInfo))
+        if (!_UserTable.InsertUser(LoginInfo))
         {
             Log::LogMessage(ERROR, "Insert user error");
             HttpResp(con, false, websocketpp::http::status_code::internal_server_error, "用户名已被占用");
@@ -107,7 +107,7 @@ private:
         // 获取正文
         std::string content = HttpRequst.get_body();
         Json::Value LoginInfo;
-        if(!JsonCpp::deserialize(content, LoginInfo))
+        if (!JsonCpp::deserialize(content, LoginInfo))
         {
             Log::LogMessage(ERROR, "Deserialize error");
             HttpResp(con, false, websocketpp::http::status_code::bad_request, "Bad Request");
@@ -115,14 +115,14 @@ private:
         }
 
         // 登录验证
-        if(LoginInfo["username"].isNull() || LoginInfo["password"].isNull())
+        if (LoginInfo["username"].isNull() || LoginInfo["password"].isNull())
         {
             Log::LogMessage(ERROR, "Username or password is empty");
             HttpResp(con, false, websocketpp::http::status_code::bad_request, "请输入用户名或密码");
             return;
         }
 
-        if(!_UserTable.Login(LoginInfo))
+        if (!_UserTable.Login(LoginInfo))
         {
             Log::LogMessage(ERROR, "Login error");
             HttpResp(con, false, websocketpp::http::status_code::internal_server_error, "用户名或密码错误");
@@ -130,7 +130,7 @@ private:
         }
         // 如果登录成功，创建会话
         SessionPtr ssp = _SessionManage.CreateSession(LoginInfo["id"].asUInt64(), SESSION_STATE::LOGIN);
-        if(ssp.get() == nullptr)
+        if (ssp.get() == nullptr)
         {
             Log::LogMessage(ERROR, "Create session error");
             HttpResp(con, false, websocketpp::http::status_code::internal_server_error, "创建会话失败");
@@ -153,15 +153,15 @@ private:
         StringSplit::Split(cookie, ";", cookies);
 
         // 以 ; 作为间隔符，分割后的字符串格式为 key=val
-        for(auto &it : cookies)
+        for (auto &it : cookies)
         {
             std::vector<std::string> kv;
             StringSplit::Split(it, "=", kv);
-            if(kv.size() != 2)
+            if (kv.size() != 2)
             {
                 continue;
             }
-            if(kv[0] == key)
+            if (kv[0] == key)
             {
                 val = kv[1];
                 return true;
@@ -178,10 +178,10 @@ private:
         std::string cookie = HttpRequest.get_header("Cookie");
 
         std::string sessionID;
-        if(!GetCookieVal(cookie, "SessionID", sessionID))
+        if (!GetCookieVal(cookie, "SessionID", sessionID))
         {
             Log::LogMessage(ERROR, "Get SessionID error");
-            HttpResp(con, false, websocketpp::http::status_code::bad_request, "Error To Find Cookie"); 
+            HttpResp(con, false, websocketpp::http::status_code::bad_request, "Error To Find Cookie");
             return;
         }
 
@@ -189,7 +189,7 @@ private:
         // 获取会话
         uint64_t sid = std::stoull(sessionID);
         SessionPtr ssp = _SessionManage.GetSessionBySID(sid);
-        if(ssp.get() == nullptr)
+        if (ssp.get() == nullptr)
         {
             Log::LogMessage(ERROR, "Get session error");
             HttpResp(con, false, websocketpp::http::status_code::bad_request, "Bad Request");
@@ -198,7 +198,7 @@ private:
 
         // 获取用户信息
         Json::Value user;
-        if(!_UserTable.SelectByUID(ssp->GetUID(), user))
+        if (!_UserTable.SelectByUID(ssp->GetUID(), user))
         {
             Log::LogMessage(ERROR, "Select user error");
             HttpResp(con, false, websocketpp::http::status_code::internal_server_error, "Internal Server Error");
@@ -217,7 +217,6 @@ private:
         return;
     }
 
-
     // Handler句柄，处理HTTP请求
     // 通过Method判断请求类型
     void HttpCallback(websocketpp::connection_hdl hdl)
@@ -226,15 +225,15 @@ private:
         websocketpp::http::parser::request HttpRequest = con->get_request();
         std::string Method = HttpRequest.get_method();
         std::string URI = HttpRequest.get_uri();
-        if(Method == "POST" && URI == "/reg")
+        if (Method == "POST" && URI == "/reg")
         {
             Reg(con);
         }
-        else if(Method == "POST" && URI == "/login")
+        else if (Method == "POST" && URI == "/login")
         {
             Login(con);
         }
-        else if(Method == "GET" && URI == "/user/info")
+        else if (Method == "GET" && URI == "/user/info")
         {
             UserGetInfo(con);
         }
@@ -255,7 +254,7 @@ private:
     {
         Json::Value ErrorResp;
         const std::string &cookie = con->get_request().get_header("Cookie");
-        if(cookie.empty())
+        if (cookie.empty())
         {
             ErrorResp["OpType"] = "HallReady";
             ErrorResp["Result"] = "false";
@@ -265,7 +264,7 @@ private:
         }
 
         std::string sessionID;
-        if(!GetCookieVal(cookie, "SessionID", sessionID))
+        if (!GetCookieVal(cookie, "SessionID", sessionID))
         {
             ErrorResp["OpType"] = "HallReady";
             ErrorResp["Result"] = "false";
@@ -275,7 +274,7 @@ private:
         }
 
         SessionPtr ssp = _SessionManage.GetSessionBySID(std::stoull(sessionID));
-        if(ssp.get() == nullptr)
+        if (ssp.get() == nullptr)
         {
             ErrorResp["OpType"] = "HallReady";
             ErrorResp["Result"] = "false";
@@ -291,13 +290,13 @@ private:
         Json::Value resp;
         // 登录验证
         SessionPtr ssp = GetSessionByCookie(con);
-        if(ssp.get() == nullptr)
+        if (ssp.get() == nullptr)
         {
             return;
         }
 
         // 判断当前客户端是否重复登录
-        if(_OnlineManage.IsInGameHall(ssp->GetUID()) || _OnlineManage.IsInGameRoom(ssp->GetUID()))
+        if (_OnlineManage.IsInGameHall(ssp->GetUID()) || _OnlineManage.IsInGameRoom(ssp->GetUID()))
         {
             resp["OpType"] = "HallReady";
             resp["Result"] = "false";
@@ -324,13 +323,13 @@ private:
         Json::Value resp;
         // 登录验证
         SessionPtr ssp = GetSessionByCookie(con);
-        if(ssp.get() == nullptr)
+        if (ssp.get() == nullptr)
         {
             return;
         }
 
         // 判断当前客户端是否重复登录
-        if(_OnlineManage.IsInGameHall(ssp->GetUID()) || _OnlineManage.IsInGameRoom(ssp->GetUID()))
+        if (_OnlineManage.IsInGameHall(ssp->GetUID()) || _OnlineManage.IsInGameRoom(ssp->GetUID()))
         {
             resp["OpType"] = "RoomReady";
             resp["Result"] = "false";
@@ -338,10 +337,10 @@ private:
             WebsocketResp(con, resp);
             return;
         }
-        
+
         // 判断当前用户是否已经创建好房间
         RoomPtr room = _RoomManage.GetRoomByUID(ssp->GetUID());
-        if(room.get() == nullptr)
+        if (room.get() == nullptr)
         {
             resp["OpType"] = "RoomReady";
             resp["Result"] = "false";
@@ -369,12 +368,12 @@ private:
         wsserver_t::connection_ptr con = _Server.get_con_from_hdl(hdl);
         websocketpp::http::parser::request HttpRequest = con->get_request();
         std::string URI = HttpRequest.get_uri();
-        if(URI == "/gamehall")
+        if (URI == "/gamehall")
         {
             WebsocketOpenGameHall(con);
             return;
         }
-        else if(URI == "/gameroom")
+        else if (URI == "/gameroom")
         {
             WebsocketOpenGameRoom(con);
             return;
@@ -386,14 +385,14 @@ private:
         Json::Value resp;
         // 登录验证
         SessionPtr ssp = GetSessionByCookie(con);
-        if(ssp.get() == nullptr)
+        if (ssp.get() == nullptr)
         {
             return;
         }
 
         // 将当前客户端以及连接断开游戏大厅
         _OnlineManage.ExitGameHall(ssp->GetUID());
-        
+
         // 将Session设置
         _SessionManage.SetSessionExpireTime(ssp->GetSessionID(), SESSION_TIMEOUT);
     }
@@ -401,7 +400,7 @@ private:
     void WebsocketCloseGameRoom(wsserver_t::connection_ptr con)
     {
         SessionPtr ssp = GetSessionByCookie(con);
-        if(ssp.get() == nullptr)
+        if (ssp.get() == nullptr)
         {
             return;
         }
@@ -417,11 +416,11 @@ private:
     {
         wsserver_t::connection_ptr con = _Server.get_con_from_hdl(hdl);
         std::string URI = con->get_request().get_uri();
-        if(URI == "/gamehall")
+        if (URI == "/gamehall")
         {
             WebsocketCloseGameHall(con);
         }
-        else if(URI == "/gameroom")
+        else if (URI == "/gameroom")
         {
             WebsocketCloseGameRoom(con);
         }
@@ -432,7 +431,7 @@ private:
         Json::Value resp;
         std::string content;
         SessionPtr ssp = GetSessionByCookie(con);
-        if(ssp.get() == nullptr)
+        if (ssp.get() == nullptr)
         {
             return;
         }
@@ -440,7 +439,7 @@ private:
         // 获取请求信息
         std::string message = msg->get_payload();
         Json::Value req;
-        if(!JsonCpp::deserialize(message, req))
+        if (!JsonCpp::deserialize(message, req))
         {
             resp["OpType"] = "HallMessage";
             resp["Result"] = "false";
@@ -449,7 +448,7 @@ private:
             return;
         }
 
-        if(req["OpType"].isString() && req["OpType"].asString() == "MatchStart")
+        if (req["OpType"].isString() && req["OpType"].asString() == "MatchStart")
         {
             _Matcher.AddMatch(ssp->GetUID());
             resp["OpType"] = "MatchStart";
@@ -457,7 +456,7 @@ private:
             WebsocketResp(con, resp);
             return;
         }
-        else if(req["OpType"].isString() && req["OpType"].asString() == "MatchCancel")
+        else if (req["OpType"].isString() && req["OpType"].asString() == "MatchCancel")
         {
             _Matcher.DelMatch(ssp->GetUID());
             resp["OpType"] = "MatchCancel";
@@ -465,7 +464,8 @@ private:
             WebsocketResp(con, resp);
             return;
         }
-        else{
+        else
+        {
             resp["OpType"] = "UNKNOWN";
             resp["Reason"] = "Unknown Request";
             resp["Result"] = "true";
@@ -478,14 +478,14 @@ private:
     {
         Json::Value resp;
         SessionPtr ssp = GetSessionByCookie(con);
-        if(ssp.get() == nullptr)
+        if (ssp.get() == nullptr)
         {
             return;
         }
 
         // 获取客户端房间信息
         RoomPtr room = _RoomManage.GetRoomByUID(ssp->GetUID());
-        if(room.get() == nullptr)
+        if (room.get() == nullptr)
         {
             Log::LogInit("log.txt", NORMAL);
             resp["OpType"] = "Unknown";
@@ -499,7 +499,7 @@ private:
         // 对消息进行反序列化处理
         Json::Value req;
         std::string body = msg->get_payload();
-        if(!JsonCpp::deserialize(body, req))
+        if (!JsonCpp::deserialize(body, req))
         {
             resp["OpType"] = "Unknown";
             resp["Result"] = "false";
@@ -515,11 +515,11 @@ private:
     {
         wsserver_t::connection_ptr con = _Server.get_con_from_hdl(hdl);
         std::string URI = con->get_request().get_uri();
-        if(URI == "/gamehall")
+        if (URI == "/gamehall")
         {
             WebsocketMessageGameHall(con, msg);
         }
-        else if(URI == "/gameroom")
+        else if (URI == "/gameroom")
         {
             WebsocketMessageGameRoom(con, msg);
         }
@@ -536,15 +536,15 @@ public:
           _Matcher(&_RoomManage, &_UserTable, &_OnlineManage),
           _WebRoot(webroot),
           _SessionManage(&_Server)
-          {
-                _Server.clear_access_channels(websocketpp::log::alevel::all);
-                _Server.clear_error_channels(websocketpp::log::elevel::all);
-                _Server.init_asio();
-                _Server.set_http_handler(std::bind(&GameServer::HttpCallback, this, std::placeholders::_1));
-                _Server.set_open_handler(std::bind(&GameServer::WebsocketOpenCallback, this, std::placeholders::_1));
-                _Server.set_close_handler(std::bind(&GameServer::WebsocketCloseCallback, this, std::placeholders::_1));
-                _Server.set_message_handler(std::bind(&GameServer::WebsocketMessageCallback, this, std::placeholders::_1, std::placeholders::_2));
-          }
+    {
+        _Server.clear_access_channels(websocketpp::log::alevel::all);
+        _Server.clear_error_channels(websocketpp::log::elevel::all);
+        _Server.init_asio();
+        _Server.set_http_handler(std::bind(&GameServer::HttpCallback, this, std::placeholders::_1));
+        _Server.set_open_handler(std::bind(&GameServer::WebsocketOpenCallback, this, std::placeholders::_1));
+        _Server.set_close_handler(std::bind(&GameServer::WebsocketCloseCallback, this, std::placeholders::_1));
+        _Server.set_message_handler(std::bind(&GameServer::WebsocketMessageCallback, this, std::placeholders::_1, std::placeholders::_2));
+    }
 
     void Run(uint16_t port)
     {
