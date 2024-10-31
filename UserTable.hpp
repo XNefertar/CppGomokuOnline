@@ -124,6 +124,40 @@ public:
         return true;
     }
 
+    // 通过UID获取用户信息
+    bool SelectByUID(uint64_t id, Json::Value &user)
+    {
+        char sql[USER_TABLE_MAX_SIZE]{};
+        sprintf(sql, SELECT_BY_NAME, id);
+        MYSQL_RES *res = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if(!MySQL::MySQL_Execute(_mysql, sql))
+            {
+                Log::LogMessage(ERROR, "Select user error: %s", mysql_error(_mysql));
+                return false;
+            }
+            res = mysql_store_result(_mysql);
+            if(res == NULL)
+            {
+                Log::LogMessage(ERROR, "Select user error: %s", mysql_error(_mysql));
+                return false;
+            }
+        }
+        MYSQL_ROW row = mysql_fetch_row(res);
+        if(row == NULL)
+        {
+            Log::LogMessage(ERROR, "Select user error: %s", mysql_error(_mysql));
+            return false;
+        }
+        user["id"] = id;
+        user["username"] = row[0];
+        user["score"] = atoi(row[1]);
+        user["total_count"] = atoi(row[2]);
+        user["win_count"] = atoi(row[3]);
+        mysql_free_result(res);
+        return true;
+    }
 
     // 通过用户名获取用户信息
     bool SelectByName(const std::string UserName, Json::Value &user)
