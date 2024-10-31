@@ -34,8 +34,7 @@ public:
           _State(UNLOGIN),
           _TimerPtr(nullptr)
     {
-        Log::LogInit("log.txt", NORMAL);
-        Log::LogMessage(INFO, "Session init success");
+        // Log::LogMessage(INFO, "Session init success");
     }
 
     ~Session()
@@ -43,7 +42,7 @@ public:
         if(_TimerPtr != nullptr)
         {
             _TimerPtr->cancel();
-            Log::LogMessage(INFO, "Session destroy");
+            // Log::LogMessage(INFO, "Session destroy");
         }
     }
 

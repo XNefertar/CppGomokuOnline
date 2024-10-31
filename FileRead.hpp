@@ -19,15 +19,12 @@ public:
     // content: 文件内容，输出参数
     static bool Read(const std::string &file_path, std::string &content, std::ios_base::openmode mode = DEFAULT_OPEN_MODE)
     {
-        // 0. 初始化日志
-        Log::LogInit("log.txt", NORMAL);
-
         // 1. 打开文件
         std::ifstream file;
         file.open(file_path, mode);
         if(!file)
         {
-            Log::LogMessage(ERROR, "OPEN FILE ERROR");
+            // Log::LogMessage(ERROR, "OPEN FILE ERROR");
             return false;
         }
 
@@ -41,7 +38,7 @@ public:
 
         if(file.bad())
         {
-            Log::LogMessage(ERROR, "READ FILE ERROR");
+            // Log::LogMessage(ERROR, "READ FILE ERROR");
             return false;
         }
         file.close();

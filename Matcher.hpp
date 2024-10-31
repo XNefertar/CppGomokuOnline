@@ -55,8 +55,7 @@ public:
         _NormalThread = std::thread(&Matcher::HandlerMatch, this, std::ref(_QueueNormal));
         _HighThread = std::thread(&Matcher::HandlerMatch, this, std::ref(_QueueHigh));
         _SuperThread = std::thread(&Matcher::HandlerMatch, this, std::ref(_QueueSuper));
-        Log::LogInit("log.txt", NORMAL);
-        Log::LogMessage(INFO, "Matcher init success");
+        // Log::LogMessage(INFO, "Matcher init success");
     }
 
     ~Matcher()
@@ -130,11 +129,16 @@ private:
                 mQueue.WaitThread();
             }
 
-            uint64_t uid1 = mQueue.Pop();
-            uint64_t uid2 = mQueue.Pop();
-            RoomPtr room = _RoomManage->CreateRoom(uid1, uid2);
-            if (room == nullptr)
+            uint64_t uid1, uid2;
+            bool ret = mQueue.Pop(uid1);
+            if (ret == false)
             {
+                continue;
+            }
+            ret = mQueue.Pop(uid2);
+            if (ret == false)
+            {
+                this->AddMatch(uid1);
                 continue;
             }
             // 如果匹配成功，通知双方玩家

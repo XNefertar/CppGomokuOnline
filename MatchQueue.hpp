@@ -2,6 +2,8 @@
 #define _MATCH_QUEUE_HPP_
 
 #define QUEUE_SIZE_TYPE int
+#include <queue>
+#include <condition_variable>
 
 template<class T>
 class MatchQueue
@@ -54,6 +56,19 @@ public:
         ValueType t = _Queue.front();
         _Queue.pop();
         return t;
+    }
+
+    bool Pop(ValueType &data)
+    {   
+        std::unique_lock<std::mutex> lock(_Mutex);
+        if(_Queue.empty())
+        {
+            return false;
+        }
+        ValueType t = _Queue.front();
+        data = t;
+        _Queue.pop();
+        return true;
     }
 
     void Remove(ValueType& t)

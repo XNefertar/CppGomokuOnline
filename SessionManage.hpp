@@ -23,14 +23,13 @@ public:
     SessionManage(wsserver_t *server)
         : _NextSID(0),
           _Server(server)
-    { 
-        Log::LogInit("log.txt", NORMAL);
-        Log::LogMessage(INFO, "SessionManage init success");
+    {
+        // Log::LogMessage(INFO, "SessionManage init success");
     }
 
     ~SessionManage()
     {
-        Log::LogMessage(INFO, "SessionManage destroy");
+        // Log::LogMessage(INFO, "SessionManage destroy");
     }
 
     SessionPtr CreateSession(uint64_t uid, SESSION_STATE state)

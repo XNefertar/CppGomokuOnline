@@ -103,14 +103,13 @@ public:
           _OnlineUser(OnlineUser),
           _Board(BOARD_ROW, std::vector<int>(BOARD_COL, -1))
     {
-        Log::LogInit("log.txt", NORMAL);
-        Log::LogMessage(INFO, "Room %d init success", _RoomId);
+        // Log::LogMessage(INFO, "Room %d init success", _RoomId);
     }
 
     // 重置棋盘
     ~Room()
     {
-        Log::LogMessage(INFO, "Room %d destroy", _RoomId);
+        // Log::LogMessage(INFO, "Room %d destroy", _RoomId);
     }
 
     // 一系列函数接口用于获取信息
@@ -258,7 +257,7 @@ public:
         }
         else
         {
-            Log::LogMessage(ERROR, "White player failed to send message");
+            // Log::LogMessage(ERROR, "White player failed to send message");
         }
 
         wsserver_t::connection_ptr WebConPtrBlack;
@@ -269,7 +268,7 @@ public:
         }
         else
         {
-            Log::LogMessage(ERROR, "Black player failed to send message");
+            // Log::LogMessage(ERROR, "Black player failed to send message");
         }
     }
 

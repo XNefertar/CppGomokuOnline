@@ -53,7 +53,6 @@ namespace LOG_MSG
     {
     private:
         static std::mutex mtx;
-        static LOG_LEVEL currentLogLevel;
         static FILE *logFile;
 
     private:
@@ -79,9 +78,8 @@ namespace LOG_MSG
         }
 
     public:
-        static void LogInit(const char *log_file_path, LOG_LEVEL level)
+        static void LogInit(const char *log_file_path)
         {
-            currentLogLevel = level;
             logFile = fopen(log_file_path, "a+");
             if (!logFile)
             {
@@ -101,8 +99,8 @@ namespace LOG_MSG
 
         static void LogMessage(LOG_LEVEL level, LOG_MESSAGE message, ...)
         {
-            if (level > currentLogLevel || !logFile)
-                return; // 过滤日志级别和文件指针检查
+            if (!logFile)
+                return; // 文件指针检查
 
             std::lock_guard<std::mutex> lock(mtx);
 
@@ -121,7 +119,6 @@ namespace LOG_MSG
         }
     };
     // 静态成员初始化
-    LOG_LEVEL Log::currentLogLevel = NORMAL;
     FILE *Log::logFile = nullptr;
     std::mutex Log::mtx;
 

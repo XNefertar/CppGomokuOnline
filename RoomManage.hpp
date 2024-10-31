@@ -29,12 +29,11 @@ public:
           _UserTable(UserTable),
           _OnlineUser(OnlineUser)
     {
-        Log::LogInit("log.txt", NORMAL);
-        Log::LogMessage(INFO, "RoomManage init success");
+        // Log::LogMessage(INFO, "RoomManage init success");
     }
     ~RoomManage()
     {
-        Log::LogMessage(INFO, "RoomManage destroy");
+        // Log::LogMessage(INFO, "RoomManage destroy");
     }
 
     RoomPtr CreateRoom(uint64_t uid1, uint64_t uid2)
@@ -42,7 +41,7 @@ public:
         // 校验用户是否在线
         if(!_OnlineUser->IsInGameHall(uid1) || !_OnlineUser->IsInGameHall(uid2))
         {
-            Log::LogMessage(ERROR, "User is not online");
+            // Log::LogMessage(ERROR, "User is not online");
             return nullptr;
         }
 

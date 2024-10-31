@@ -14,19 +14,20 @@
 
 #define SESSION_TIMEOUT 15000
 #define SESSION_FOREVER -1
+#define WWWROOT         "./wwwroot/"
 
 using namespace LOG_MSG;
 
 class GameServer
 {
 private:
-    std::string _WebRoot;
-    wsserver_t _Server;
-    Matcher _Matcher;
-    UserTable _UserTable;
-    RoomManage _RoomManage;
-    OnlineManage _OnlineManage;
-    SessionManage _SessionManage;
+    std::string     _WebRoot;
+    wsserver_t      _Server;
+    Matcher         _Matcher;
+    UserTable       _UserTable;
+    RoomManage      _RoomManage;
+    OnlineManage    _OnlineManage;
+    SessionManage   _SessionManage;
 
 private:
     void HandlerFile(wsserver_t::connection_ptr con)
@@ -37,26 +38,27 @@ private:
 
         if (FilePath.back() == '/')
         {
-            FilePath += "login.html";
+            FilePath += "index.html";
         }
 
         Json::Value resp;
-        std::string content;
+        std::string body;
         // 读取失败
         // 返回404 Not Found
         // 返回格式为html
-        if (!FileRead::Read(FilePath, content))
+        if (!FileRead::Read(FilePath, body))
         {
-            content += "<html><head><meta charset='UTF-8'/></head><body><h1>404 Not Found</h1></body></html>";
+            body += "<html><head><meta charset='UTF-8'/></head><body><h1>404 Not Found</h1></body></html>";
             con->set_status(websocketpp::http::status_code::not_found);
-            con->set_body(content);
+            con->set_body(body);
             return;
         }
-        con->set_body(content);
+        con->set_body(body);
         con->set_status(websocketpp::http::status_code::ok);
     }
 
-    void HttpResp(wsserver_t::connection_ptr &con, bool result, websocketpp::http::status_code::value code, const std::string &reason)
+    void HttpResp(wsserver_t::connection_ptr &con, bool result,\
+     websocketpp::http::status_code::value code, const std::string &reason)
     {
         Json::Value resp;
         resp["Result"] = result ? "true" : "false";
@@ -72,29 +74,27 @@ private:
     // 注册
     void Reg(wsserver_t::connection_ptr &con)
     {
-        Log::LogInit("log.txt", NORMAL);
         websocketpp::http::parser::request HttpRequst = con->get_request();
         // 获取正文
-        std::string content = HttpRequst.get_body();
+        std::string ReqBody = HttpRequst.get_body();
         Json::Value LoginInfo;
-        if (!JsonCpp::deserialize(content, LoginInfo))
+        if (!JsonCpp::deserialize(ReqBody, LoginInfo))
         {
-            Log::LogMessage(ERROR, "Deserialize error");
-            HttpResp(con, false, websocketpp::http::status_code::bad_request, "Bad Request");
-            return;
+            // Log::LogMessage(ERROR, "Deserialize error");
+            return HttpResp(con, false, \
+            websocketpp::http::status_code::bad_request, "Bad Request");
         }
 
         // 向数据库插入用户
         if (LoginInfo["username"].isNull() || LoginInfo["password"].isNull())
         {
-            Log::LogMessage(ERROR, "Username or password is empty");
-            HttpResp(con, false, websocketpp::http::status_code::bad_request, "请输入用户名或密码");
-            return;
+            // Log::LogMessage(ERROR, "Username or password is empty");
+            return HttpResp(con, false, websocketpp::http::status_code::bad_request, "请输入用户名或密码");
         }
 
         if (!_UserTable.InsertUser(LoginInfo))
         {
-            Log::LogMessage(ERROR, "Insert user error");
+            // Log::LogMessage(ERROR, "Insert user error");
             HttpResp(con, false, websocketpp::http::status_code::internal_server_error, "用户名已被占用");
             return;
         }
@@ -109,36 +109,36 @@ private:
         Json::Value LoginInfo;
         if (!JsonCpp::deserialize(content, LoginInfo))
         {
-            Log::LogMessage(ERROR, "Deserialize error");
+            // Log::LogMessage(ERROR, "Deserialize error");
             HttpResp(con, false, websocketpp::http::status_code::bad_request, "Bad Request");
             return;
         }
 
-        // 登录验证
+        // 校验正文完整性
         if (LoginInfo["username"].isNull() || LoginInfo["password"].isNull())
         {
-            Log::LogMessage(ERROR, "Username or password is empty");
-            HttpResp(con, false, websocketpp::http::status_code::bad_request, "请输入用户名或密码");
-            return;
+            // Log::LogMessage(ERROR, "Username or password is empty");
+            return HttpResp(con, false, websocketpp::http::status_code::bad_request, "请输入用户名或密码");
         }
-
+        std::cout << "GameServer Line 123 Success" << std::endl;
         if (!_UserTable.Login(LoginInfo))
         {
-            Log::LogMessage(ERROR, "Login error");
-            HttpResp(con, false, websocketpp::http::status_code::internal_server_error, "用户名或密码错误");
-            return;
+            std::cout << "Login Failed" << std::endl;
+            std::cout << "LoginInfo: " << LoginInfo << std::endl;
+            // Log::LogMessage(ERROR, "Login error");
+            return HttpResp(con, false, websocketpp::http::status_code::internal_server_error, "用户名或密码错误");
         }
         // 如果登录成功，创建会话
         SessionPtr ssp = _SessionManage.CreateSession(LoginInfo["id"].asUInt64(), SESSION_STATE::LOGIN);
         if (ssp.get() == nullptr)
         {
-            Log::LogMessage(ERROR, "Create session error");
+            // Log::LogMessage(ERROR, "Create session error");
             HttpResp(con, false, websocketpp::http::status_code::internal_server_error, "创建会话失败");
             return;
         }
         // 设置会话过期时间
         _SessionManage.SetSessionExpireTime(ssp->GetSessionID(), SESSION_TIMEOUT);
-
+        std::cout << "GameServer Line 141 Success" << std::endl;
         // 设置响应头部
         con->append_header("Set-Cookie", "SessionID=" + std::to_string(ssp->GetSessionID()));
 
@@ -180,7 +180,7 @@ private:
         std::string sessionID;
         if (!GetCookieVal(cookie, "SessionID", sessionID))
         {
-            Log::LogMessage(ERROR, "Get SessionID error");
+            // Log::LogMessage(ERROR, "Get SessionID error");
             HttpResp(con, false, websocketpp::http::status_code::bad_request, "Error To Find Cookie");
             return;
         }
@@ -191,7 +191,7 @@ private:
         SessionPtr ssp = _SessionManage.GetSessionBySID(sid);
         if (ssp.get() == nullptr)
         {
-            Log::LogMessage(ERROR, "Get session error");
+            // Log::LogMessage(ERROR, "Get session error");
             HttpResp(con, false, websocketpp::http::status_code::bad_request, "Bad Request");
             return;
         }
@@ -200,7 +200,7 @@ private:
         Json::Value user;
         if (!_UserTable.SelectByUID(ssp->GetUID(), user))
         {
-            Log::LogMessage(ERROR, "Select user error");
+            // Log::LogMessage(ERROR, "Select user error");
             HttpResp(con, false, websocketpp::http::status_code::internal_server_error, "Internal Server Error");
             return;
         }
@@ -487,12 +487,11 @@ private:
         RoomPtr room = _RoomManage.GetRoomByUID(ssp->GetUID());
         if (room.get() == nullptr)
         {
-            Log::LogInit("log.txt", NORMAL);
             resp["OpType"] = "Unknown";
             resp["Result"] = "false";
             resp["Reason"] = "Not In GameRoom";
             WebsocketResp(con, resp);
-            Log::LogMessage(ERROR, "Not In GameRoom");
+            // Log::LogMessage(ERROR, "Not In GameRoom");
             return;
         }
 
@@ -530,7 +529,8 @@ public:
                const std::string &user,
                const std::string &passwd,
                const std::string &dbname,
-               const std::string &webroot)
+               uint16_t port = 3306,
+               const std::string &webroot = WWWROOT)
         : _UserTable(host, user, passwd, dbname),
           _RoomManage(&_UserTable, &_OnlineManage),
           _Matcher(&_RoomManage, &_UserTable, &_OnlineManage),
