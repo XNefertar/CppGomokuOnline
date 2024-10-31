@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏大厅</title>
+    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/game_hall.css">
+</head>
+<body>
+    <div class="nav">网络五子棋对战游戏</div>
+    <!-- 整个页面的容器元素 -->
+    <div class="container">
+        <!-- 这个 div 在 container 中是处于垂直水平居中这样的位置的 -->
+        <div>
+            <!-- 展示用户信息 -->
+            <div id="screen"></div>
+            <!-- 匹配按钮 -->
+            <div id="match-button">开始匹配</div>
+        </div>
+    </div>
+
+    <script src="./js/jquery.min.js"></script>
+    <script>
+        var ws_url = "ws://" + location.host + "/hall";
+        var ws_hdl = null;
+
+        window.onbeforeunload = function() {
+            ws_hdl.close();
+        }
+        //按钮有两个状态：没有进行匹配的状态，正在匹配中的状态
+        var button_flag = "stop";
+        //点击按钮的事件处理：
+        var be = document.getElementById("match-button");
+        be.onclick = function() {
+            if (button_flag == "stop") {
+                //1. 没有进行匹配的状态下点击按钮，发送对战匹配请求
+                var req_json = {
+                    optype: "match_start"
+                }
+                ws_hdl.send(JSON.stringify(req_json));
+            }else {
+                //2. 正在匹配中的状态下点击按钮，发送停止对战匹配请求
+                var req_json = {
+                    optype: "match_stop"
+                }
+                ws_hdl.send(JSON.stringify(req_json));
+            }
+        }
+        function get_user_info() {
+            $.ajax({
+                url: "/info",
+                type: "get",
+                success: function(res) {
+                    var info_html = "<p>" + "用户：" + res.username + " 积分：" + res.score + 
+                        "</br>" + "比赛场次：" + res.total_count + " 获胜场次：" + res.win_count + "</p>";
+                    var screen_div = document.getElementById("screen");
+                    screen_div.innerHTML = info_html;
+
+                    ws_hdl = new WebSocket(ws_url);
+                    ws_hdl.onopen = ws_onopen;
+                    ws_hdl.onclose = ws_onclose;
+                    ws_hdl.onerror = ws_onerror;
+                    ws_hdl.onmessage = ws_onmessage;
+                },
+                error: function(xhr) {
+                    alert(JSON.stringify(xhr));
+                    location.replace("/login.html");
+                }
+            })
+        }
+        function ws_onopen() {
+            console.log("websocket onopen");
+        }
+        function ws_onclose() {
+            console.log("websocket onopen");
+        }
+        function ws_onerror() {
+            console.log("websocket onopen");
+        }
+        function ws_onmessage(evt) {
+            var rsp_json = JSON.parse(evt.data);
+            if (rsp_json.result == false) {
+                alert(evt.data);
+                location.replace("/login.html");
+                return;
+            }
+            if (rsp_json["optype"] == "hall_ready") {
+                alert("游戏大厅连接建立成功！");
+            }else if (rsp_json["optype"] == "match_success") {
+                //对战匹配成功
+                alert("对战匹配成功，进入游戏房间！");
+                location.replace("/game_room.html");
+            }else if (rsp_json["optype"] == "match_start") {
+                console.log("玩家已经加入匹配队列");
+                button_flag = "start";
+                be.innerHTML = "匹配中....点击按钮停止匹配!";
+                return;
+            }else if (rsp_json["optype"] == "match_stop"){
+                console.log("玩家已经移除匹配队列");
+                button_flag = "stop";
+                be.innerHTML = "开始匹配";
+                return;
+            }else {
+                alert(evt.data);
+                location.replace("/login.html");
+                return;
+            }
+        }
+        get_user_info();
+    </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+#screen {
+    width: 450px;
+    height: 50px;
+    margin-top: 10px;
+    background-color: #fff;
+    font-size: 22px;
+    line-height: 50px;
+    text-align: center;
+}
+#chat_area {
+    width: 404px;
+    height: 400px;
+    margin-top: 10px;
+    margin-left: 150px;
+    border: 2px solid #fff; border-radius: 5px;
+    position: relative;
+    background-color: #fff;
+}
+#chat_show {
+    width: 400px;
+    height: 300px; overflow-y: scroll;
+    background-color: #fec;
+    font-size: 22px;
+    line-height: 50px;
+    text-align: center;
+}
+#chat_input {
+    width: 300px;
+    height: 50px;
+    margin-top: 30px;
+    background-color: #fff;
+    font-size: 30px;
+    border: 2px solid #fec; border-radius: 5px;
+    vertical-align: top;
+}
+#chat_button {
+    width: 90px;
+    height: 50px;
+    margin-top: 30px;
+    background-color: #fec;
+    font-size: 15px;
+    border: 2px solid #fec; border-radius: 5px;
+    vertical-align: top;
+}
+#chat_button:hover {
+    width: 90px;
+    height: 50px;
+    margin-top: 30px;
+    background-color: rgb(201, 145, 32);
+    font-size: 15px;
+    border: 2px solid #fec; border-radius: 5px;
+    vertical-align: top;
+}
+#chat_button:active {
+    width: 90px;
+    height: 50px;
+    margin-top: 30px;
+    background-color: rgb(149, 127, 83);
+    font-size: 15px;
+    border: 2px solid #fec; border-radius: 5px;
+    vertical-align: top;
+}
+
+#self_msg {
+    height: 35px;
+    line-height: 35px;
+    font-size: 15px;
+    float: right;
+    background-color: rgb(7, 190, 102);
+    border-radius: 5px;
+}
+#peer_msg {
+    height: 35px;
+    line-height: 35px;
+    font-size: 15px;
+    float: left;
+    background-color: rgb(93, 218, 243);
+    border-radius: 5px;
+}
+

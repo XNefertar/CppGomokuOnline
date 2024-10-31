@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册</title>
+    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/login.css">
+</head>
+<body>
+    <div class="nav">
+        网络五子棋对战游戏
+    </div>
+    <div class="login-container">
+        <!-- 登录界面的对话框 -->
+        <div class="login-dialog">
+            <!-- 提示信息 -->
+            <h3>注册</h3>
+            <!-- 这个表示一行 -->
+            <div class="row">
+                <span>用户名</span>
+                <input type="text" id="user_name" name="username">
+            </div>
+            <!-- 这是另一行 -->
+            <div class="row">
+                <span>密码</span>
+                <input type="password" id="password" name="password">
+            </div>
+            <!-- 提交按钮 -->
+            <div class="row">
+                <button id="submit" onclick="reg()">提交</button>
+            </div>
+        </div>
+    </div> 
+
+    <button onclick="window.location.href='index.html'">返回首页</button>
+
+    <script src="js/jquery.min.js"></script>
+    <script>
+        //1. 给按钮添加点击事件，调用注册函数
+        //2. 封装实现注册函数
+        function reg() {
+            //  1. 获取两个输入框空间中的数据，组织成为一个json串
+            var reg_info = {
+                username: document.getElementById("user_name").value,
+                password: document.getElementById("password").value
+            };
+            console.log(JSON.stringify(reg_info));
+            //  2. 通过ajax向后台发送用户注册请求
+            $.ajax({
+                url : "/reg",
+                type : "post",
+                data : JSON.stringify(reg_info),
+                success : function(res) {
+                    if (res.result == false) {
+                        //  4. 如果请求失败，则清空两个输入框内容，并提示错误原因
+                        document.getElementById("user_name").value = "";
+                        document.getElementById("password").value = "";
+                        alert(res.reason);
+                    }else {
+                        //  3. 如果请求成功，则跳转的登录页面
+                        alert(res.reason);
+                        window.location.assign("/login.html");
+                    }
+                },
+                error : function(xhr) {
+                    document.getElementById("user_name").value = "";
+                    document.getElementById("password").value = "";
+                    alert(JSON.stringify(xhr));
+                }
+            })
+        }
+    </script>
+</body>
+</html>
