@@ -477,52 +477,81 @@ private:
     void WebsocketMessageGameRoom(wsserver_t::connection_ptr con, wsserver_t::message_ptr msg)
     {
         Json::Value resp;
-        std::string content;
         SessionPtr ssp = GetSessionByCookie(con);
         if(ssp.get() == nullptr)
         {
             return;
         }
 
-        // 获取请求信息
-        std::string message = msg->get_payload();
-        Json::Value req;
-        if(!JsonCpp::deserialize(message, req))
+        // 获取客户端房间信息
+        RoomPtr room = _RoomManage.GetRoomByUID(ssp->GetUID());
+        if(room.get() == nullptr)
         {
-            resp["OpType"] = "RoomMessage";
+            Log::LogInit("log.txt", NORMAL);
+            resp["OpType"] = "Unknown";
+            resp["Result"] = "false";
+            resp["Reason"] = "Not In GameRoom";
+            WebsocketResp(con, resp);
+            Log::LogMessage(ERROR, "Not In GameRoom");
+            return;
+        }
+
+        // 对消息进行反序列化处理
+        Json::Value req;
+        std::string body = msg->get_payload();
+        if(!JsonCpp::deserialize(body, req))
+        {
+            resp["OpType"] = "Unknown";
             resp["Result"] = "false";
             resp["Reason"] = "Deserialize Error";
             WebsocketResp(con, resp);
             return;
         }
 
-        if(req["OpType"].isString() && req["OpType"].asString() == "GameStart")
+        return room->HandlerRequest(req);
+    }
+
+    void WebsocketMessageCallback(websocketpp::connection_hdl hdl, wsserver_t::message_ptr msg)
+    {
+        wsserver_t::connection_ptr con = _Server.get_con_from_hdl(hdl);
+        std::string URI = con->get_request().get_uri();
+        if(URI == "/gamehall")
         {
-            resp["OpType"] = "GameStart";
-            resp["Result"] = "true";
-            WebsocketResp(con, resp);
-            return;
+            WebsocketMessageGameHall(con, msg);
         }
-        else if(req["OpType"].isString() && req["OpType"].asString() == "GameCancel")
+        else if(URI == "/gameroom")
         {
-            resp["OpType"] = "GameCancel";
-            resp["Result"] = "true";
-            WebsocketResp(con, resp);
-            return;
-        }
-        else{
-            resp["OpType"] = "UNKNOWN";
-            resp["Reason"] = "Unknown Request";
-            resp["Result"] = "true";
-            WebsocketResp(con, resp);
-            return;
+            WebsocketMessageGameRoom(con, msg);
         }
     }
 
+public:
+    GameServer(const std::string &host,
+               const std::string &user,
+               const std::string &passwd,
+               const std::string &dbname,
+               const std::string &webroot)
+        : _UserTable(host, user, passwd, dbname),
+          _RoomManage(&_UserTable, &_OnlineManage),
+          _Matcher(&_RoomManage, &_UserTable, &_OnlineManage),
+          _WebRoot(webroot),
+          _SessionManage(&_Server)
+          {
+                _Server.clear_access_channels(websocketpp::log::alevel::all);
+                _Server.clear_error_channels(websocketpp::log::elevel::all);
+                _Server.init_asio();
+                _Server.set_http_handler(std::bind(&GameServer::HttpCallback, this, std::placeholders::_1));
+                _Server.set_open_handler(std::bind(&GameServer::WebsocketOpenCallback, this, std::placeholders::_1));
+                _Server.set_close_handler(std::bind(&GameServer::WebsocketCloseCallback, this, std::placeholders::_1));
+                _Server.set_message_handler(std::bind(&GameServer::WebsocketMessageCallback, this, std::placeholders::_1, std::placeholders::_2));
+          }
 
+    void Run(uint16_t port)
+    {
+        _Server.listen(port);
+        _Server.start_accept();
+        _Server.run();
+    }
 };
-
-
-
 
 #endif // _GAME_SERVER_HPP_
