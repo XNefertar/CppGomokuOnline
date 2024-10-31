@@ -33,7 +33,7 @@ public:
 
 
     // 退出游戏大厅和游戏房间
-    void ExitGameHall(uint16_t id, wsserver_t::connection_ptr hdl) {
+    void ExitGameHall(uint16_t id) {
         std::lock_guard<std::mutex> lock(_mutex);
         _GameHall.erase(id);
     }
