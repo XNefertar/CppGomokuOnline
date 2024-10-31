@@ -22,13 +22,13 @@ private:
 
 public:
     // 进入游戏大厅和游戏房间
-    void EnterGameHall(uint16_t id, wsserver_t::connection_ptr hdl) {
+    void EnterGameHall(uint16_t id, wsserver_t::connection_ptr &con) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _GameHall[id] = hdl;
+        _GameHall[id] = con;
     }
-    void EnterGameRoom(uint16_t id) {
+    void EnterGameRoom(uint16_t id, wsserver_t::connection_ptr &con) {
         std::lock_guard<std::mutex> lock(_mutex);
-        GameRoom[id] = hdl;
+        _GameRoom[id] = con;
     }
 
 
