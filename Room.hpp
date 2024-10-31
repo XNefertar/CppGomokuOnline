@@ -122,7 +122,7 @@ public:
     uint64_t    GetWinnerId()  { return _WinnerId; }
 
     // 一系列函数接口用于设置信息
-    void AddBlakcPlayer(uint64_t id)
+    void AddBlackPlayer(uint64_t id)
     {
         std::lock_guard<std::mutex> lock(_Mutex);
         _BlackId = id;
@@ -235,7 +235,8 @@ public:
             _UserTable->UpdateLoseUser(LoserID);
 
             _Status = GAME_OVER;
-
+            --_PlayerNum;
+            
             // 通知双方玩家
             BroadCast(resp);
         }
