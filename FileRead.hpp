@@ -5,10 +5,9 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include "Log.hpp"
+#include "Logger.hpp"
 
 #define DEFAULT_OPEN_MODE std::ios::in | std::ios::binary
-using namespace LOG_MSG;
 
 
 class FileRead

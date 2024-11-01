@@ -9,9 +9,9 @@
 #include <iostream>
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
-#include "Log.hpp"
+#include "Logger.hpp"
 
-using namespace LOG_MSG;
+
 typedef websocketpp::server<websocketpp::config::asio> wsserver_t;
 typedef enum
 {
@@ -34,6 +34,7 @@ public:
           _State(UNLOGIN),
           _TimerPtr(nullptr)
     {
+        std::cout << "Session init success" << std::endl;
         // Log::LogMessage(INFO, "Session init success");
     }
 

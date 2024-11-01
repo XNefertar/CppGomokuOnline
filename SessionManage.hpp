@@ -2,14 +2,14 @@
 #define _SESSION_MANAGE_HPP_
 
 #include "Session.hpp"
-#include "Log.hpp"
+#include "Logger.hpp"
 #include <unordered_map>
 
 #define SESSION_TIMEOUT 15000
 #define SESSION_FOREVER -1
 
 using SessionPtr = std::shared_ptr<Session>;
-using namespace LOG_MSG;
+
 
 class SessionManage
 {
@@ -39,6 +39,8 @@ public:
         session->SetState(state);
         _SessionMap.insert(std::make_pair(_NextSID, session));
         ++_NextSID;
+
+        std::cout << "Create Session " << session->GetSessionID() << " Success" << std::endl;
 
         return session;
     }

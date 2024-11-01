@@ -9,7 +9,7 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 #include <jsoncpp/json/json.h>
-#include "Log.hpp"
+#include "Logger.hpp"
 
 typedef websocketpp::server<websocketpp::config::asio> wsserver_t;
 

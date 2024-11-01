@@ -9,7 +9,7 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 #include <jsoncpp/json/json.h>
-#include "Log.hpp"
+#include "Logger.hpp"
 #include "JsonCpp.hpp"
 #include "UserTable.hpp"
 #include "OnlineManage.hpp"
@@ -22,7 +22,6 @@
 #define CHESS_BLACK_COLOR    1
 
 
-using namespace LOG_MSG;
 typedef enum
 {
     GAME_START = 0,
@@ -103,6 +102,7 @@ public:
           _OnlineUser(OnlineUser),
           _Board(BOARD_ROW, std::vector<int>(BOARD_COL, -1))
     {
+        std::cout << "Room " << _RoomId << " 初始化完成" << std::endl;
         // Log::LogMessage(INFO, "Room %d init success", _RoomId);
     }
 

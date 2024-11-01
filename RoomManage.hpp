@@ -4,11 +4,10 @@
 #include "Room.hpp"
 #include "OnlineManage.hpp"
 #include "UserTable.hpp"
-#include "Log.hpp"
+#include "Logger.hpp"
 #include "MySQL.hpp"
 #include "JsonCpp.hpp"
 
-using namespace LOG_MSG;
 using RoomPtr = std::shared_ptr<Room>;
 
 class RoomManage
@@ -53,6 +52,8 @@ public:
         _Users.insert(std::make_pair(uid1, room->GetRoomId()));
         _Users.insert(std::make_pair(uid2, room->GetRoomId()));
         ++_NextRID;
+
+        std::cout << "Create Room " << room->GetRoomId() << " Success" << std::endl;
 
         return room;
     }

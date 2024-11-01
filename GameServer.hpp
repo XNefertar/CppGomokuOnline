@@ -2,7 +2,7 @@
 #define _GAME_SERVER_HPP_
 
 #include "MySQL.hpp"
-#include "Log.hpp"
+#include "Logger.hpp"
 #include "FileRead.hpp"
 #include "JsonCpp.hpp"
 #include "OnlineManage.hpp"
@@ -15,8 +15,6 @@
 #define SESSION_TIMEOUT 15000
 #define SESSION_FOREVER -1
 #define WWWROOT         "./wwwroot/"
-
-using namespace LOG_MSG;
 
 class GameServer
 {
