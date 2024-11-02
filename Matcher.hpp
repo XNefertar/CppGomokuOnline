@@ -56,6 +56,8 @@ public:
         _HighThread = std::thread(&Matcher::HandlerMatch, this, std::ref(_QueueHigh));
         _SuperThread = std::thread(&Matcher::HandlerMatch, this, std::ref(_QueueSuper));
         // Log::LogMessage(INFO, "Matcher init success");
+        INF_LOG("Matcher init success");
+        std::cout << "Matcher init success" << std::endl;
     }
 
     ~Matcher()

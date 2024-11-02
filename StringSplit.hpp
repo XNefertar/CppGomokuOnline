@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include "Logger.hpp"
 
 class StringSplit
 {
@@ -14,13 +15,28 @@ public:
     // output: 分割结果
     static int Split(const std::string& input, const std::string& split_char, std::vector<std::string>& output)
     {
-        output.clear();
         size_t start = 0;
         size_t pos = 0;
-        while((pos = input.find(split_char, start)) != std::string::npos)
+        while(start < input.size())
         {
+            pos = input.find(split_char, start);
+            if(pos == std::string::npos)
+            {
+                output.push_back(input.substr(start));
+                break;
+            }
+            if(pos == start)
+            {
+                start += split_char.size();
+                continue;
+            }
             output.push_back(input.substr(start, pos - start));
             start = pos + split_char.size();
+        }
+        DBG_LOG("Split size = %ld", output.size());
+        for(auto it : output)
+        {
+            DBG_LOG("Split it = %s", it.c_str());
         }
         return output.size();
     }

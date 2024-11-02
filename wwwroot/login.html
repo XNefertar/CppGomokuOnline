@@ -50,8 +50,9 @@
             };
             //  2. 通过ajax向后台发送登录验证请求
             $.ajax({
-                url: "/login",
-                type: "post",
+                url: "/login",  // 修正拼写错误
+                type: "POST",
+                contentType: "application/json",  // 确保发送JSON格式
                 data: JSON.stringify(login_info),
                 success: function(result) {
                     //  3. 如果验证通过，则跳转游戏大厅页面

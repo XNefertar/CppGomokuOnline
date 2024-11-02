@@ -37,13 +37,13 @@
             if (button_flag == "stop") {
                 //1. 没有进行匹配的状态下点击按钮，发送对战匹配请求
                 var req_json = {
-                    optype: "match_start"
+                    OpType: "MatchStart"
                 }
                 ws_hdl.send(JSON.stringify(req_json));
             }else {
                 //2. 正在匹配中的状态下点击按钮，发送停止对战匹配请求
                 var req_json = {
-                    optype: "match_stop"
+                    OpType: "MatchStop"
                 }
                 ws_hdl.send(JSON.stringify(req_json));
             }
@@ -51,7 +51,7 @@
         function get_user_info() {
             $.ajax({
                 url: "/info",
-                type: "get",
+                type: "GET",
                 success: function(res) {
                     var info_html = "<p>" + "用户：" + res.username + " 积分：" + res.score + 
                         "</br>" + "比赛场次：" + res.total_count + " 获胜场次：" + res.win_count + "</p>";
@@ -86,18 +86,18 @@
                 location.replace("/login.html");
                 return;
             }
-            if (rsp_json["optype"] == "hall_ready") {
+            if (rsp_json["OpType"] == "HallReady") {
                 alert("游戏大厅连接建立成功！");
-            }else if (rsp_json["optype"] == "match_success") {
+            }else if (rsp_json["OpType"] == "MatchSuccess") {
                 //对战匹配成功
                 alert("对战匹配成功，进入游戏房间！");
                 location.replace("/game_room.html");
-            }else if (rsp_json["optype"] == "match_start") {
+            }else if (rsp_json["OpType"] == "MatchStart") {
                 console.log("玩家已经加入匹配队列");
                 button_flag = "start";
                 be.innerHTML = "匹配中....点击按钮停止匹配!";
                 return;
-            }else if (rsp_json["optype"] == "match_stop"){
+            }else if (rsp_json["OpType"] == "MatchStop"){
                 console.log("玩家已经移除匹配队列");
                 button_flag = "stop";
                 be.innerHTML = "开始匹配";

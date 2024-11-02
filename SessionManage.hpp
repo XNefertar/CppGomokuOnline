@@ -5,7 +5,7 @@
 #include "Logger.hpp"
 #include <unordered_map>
 
-#define SESSION_TIMEOUT 15000
+#define SESSION_TIMEOUT 30000
 #define SESSION_FOREVER -1
 
 using SessionPtr = std::shared_ptr<Session>;
@@ -21,34 +21,37 @@ private:
 
 public:
     SessionManage(wsserver_t *server)
-        : _NextSID(0),
+        : _NextSID(1),
           _Server(server)
     {
+        DBG_LOG("SessionManage init success");
         // Log::LogMessage(INFO, "SessionManage init success");
     }
 
     ~SessionManage()
     {
+        DBG_LOG("SessionManage destroy");
         // Log::LogMessage(INFO, "SessionManage destroy");
     }
 
     SessionPtr CreateSession(uint64_t uid, SESSION_STATE state)
     {
         std::lock_guard<std::mutex> lock(_Mutex);
-        SessionPtr session = std::make_shared<Session>(uid, _NextSID);
-        session->SetState(state);
-        _SessionMap.insert(std::make_pair(_NextSID, session));
+        SessionPtr sessionPtr(new Session(_NextSID));
+        sessionPtr->SetState(state);
+        sessionPtr->SetUID(uid);
+        _SessionMap.insert(std::make_pair(_NextSID, sessionPtr));
         ++_NextSID;
 
-        std::cout << "Create Session " << session->GetSessionID() << " Success" << std::endl;
+        DBG_LOG("Create Session Success: %lu", sessionPtr->GetSessionID());
 
-        return session;
+        return sessionPtr;
     }
 
-    void AppendSession(const SessionPtr &session)
+    void AppendSession(const SessionPtr &sessionPtr)
     {
         std::lock_guard<std::mutex> lock(_Mutex);
-        _SessionMap.insert(std::make_pair(session->GetSessionID(), session));
+        _SessionMap.insert(std::make_pair(sessionPtr->GetSessionID(), sessionPtr));
     }
 
     SessionPtr GetSessionBySID(uint64_t sid)
@@ -57,7 +60,7 @@ public:
         auto iter = _SessionMap.find(sid);
         if(iter == _SessionMap.end())
         {
-            return nullptr;
+            return SessionPtr();
         }
         return iter->second;
     }
@@ -65,12 +68,7 @@ public:
     void RemoveSession(uint64_t sid)
     {
         std::lock_guard<std::mutex> lock(_Mutex);
-        auto iter = _SessionMap.find(sid);
-        if(iter == _SessionMap.end())
-        {
-            return;
-        }
-        _SessionMap.erase(iter);
+        _SessionMap.erase(sid);
     }
 
 
@@ -83,46 +81,41 @@ public:
     // TODO
     void SetSessionExpireTime(uint64_t sid, int time)
     {
-        SessionPtr session = GetSessionBySID(sid);
-        if(session.get() == nullptr)
+        SessionPtr sessionPtr = GetSessionBySID(sid);
+        if(sessionPtr.get() == nullptr)
         {
             return;
         }
+
+
         // 获取定时器
-        wsserver_t::timer_ptr timer = session->GetTimer();
-        if(timer == nullptr && time == SESSION_FOREVER)
+        wsserver_t::timer_ptr timer = sessionPtr->GetTimer();
+        if(timer.get() == nullptr && time == SESSION_FOREVER)
         {
             return;
         }
-        else if(timer == nullptr && time == SESSION_TIMEOUT)
+
+        else if(timer.get() == nullptr && time != SESSION_FOREVER)
         {
             wsserver_t::timer_ptr new_timer = _Server->set_timer(time, std::bind(&SessionManage::RemoveSession, this, sid));
-            session->SetTimer(new_timer);
-        }
-        else if(timer != nullptr && time == SESSION_FOREVER)
-        {
-            timer->cancel();
-            session->SetTimer(nullptr);
-
-        }
-        else if(timer != nullptr && time == SESSION_FOREVER)
-        {
-            timer->cancel();
-            wsserver_t::timer_ptr new_timer = _Server->set_timer(time, std::bind(&SessionManage::RemoveSession, this, sid));
-            session->SetTimer(new_timer);
-            _Server->set_timer(0, std::bind(&SessionManage::AppendSession, this, session));
-        }
-        else if(timer != nullptr && time == SESSION_TIMEOUT)
-        {
-            // TODO
-            timer->cancel();
-            session->SetTimer(wsserver_t::timer_ptr());
-            _Server->set_timer(0, std::bind(&SessionManage::AppendSession, this, session));
-
-            wsserver_t::timer_ptr new_timer = _Server->set_timer(time, std::bind(&SessionManage::RemoveSession, this, sid));
-            session->SetTimer(new_timer);
+            sessionPtr->SetTimer(new_timer);
         }
 
+        else if(timer.get() != nullptr && time == SESSION_FOREVER)
+        {
+            timer->cancel();
+            sessionPtr->SetTimer(wsserver_t::timer_ptr());
+            _Server->set_timer(0, std::bind(&SessionManage::AppendSession, this, sessionPtr));
+        }
+
+        else if(timer.get() != nullptr && time != SESSION_FOREVER)
+        {
+            timer->cancel();
+            sessionPtr->SetTimer(wsserver_t::timer_ptr());
+            _Server->set_timer(0, std::bind(&SessionManage::AppendSession, this, sessionPtr));
+            wsserver_t::timer_ptr new_timer = _Server->set_timer(time, std::bind(&SessionManage::RemoveSession, this, sessionPtr->GetSessionID()));
+            sessionPtr->SetTimer(new_timer);
+        }
     }
 };
 

@@ -13,8 +13,8 @@
 
 #define HOST        "192.144.236.38"
 #define USE_TABLE   "user"
-#define USER        "root"
-#define PASSWD      "XMysql12345"
+#define USER        "xl"
+#define PASSWD      "X@mysql12345"
 #define DBNAME      "gobang"
 #define PORT        3306
 
@@ -42,30 +42,27 @@ public:
         if (mysql == NULL)
         {
             ERR_LOG("MySQL init error");
-            // std::cerr << "MySQL init error" << std::endl;
-            // Log::LogMessage(ERROR, "MySQL init error");
             return NULL;
         }
 
-        // 2. 连接mysql服务器
-        if (mysql_real_connect(mysql, HOST, USER, PASSWD, DBNAME, 0, NULL, 0) == NULL)
+        // 3. 连接到MySQL服务器
+        if (mysql_real_connect(mysql, host.c_str(), user.c_str(), passwd.c_str(), dbname.c_str(), port, NULL, 0) == NULL)
         {
-            // mysql_real_connect(mysql, HOST, USER, PASSWD, DBNAME, 0, NULL, 0
-            ERR_LOG("connect mysql server error: %s", mysql_error(mysql));
-            // Log::LogMessage(ERROR, "connect mysql server error: %s\n", mysql_error(mysql));
+            ERR_LOG("MySQL connection error");
             mysql_close(mysql);
             return NULL;
         }
 
-        // 3. 设置字符集
-        if (mysql_set_character_set(mysql, "utf8mb4") != 0)
+        // 4. 设置字符集（可选）
+        if (mysql_set_character_set(mysql, "utf8") == -1)
         {
-            ERR_LOG("set character error: %s", mysql_error(mysql));
-            // Log::LogMessage(ERROR, "set character error: %s\n", mysql_error(mysql));
+            ERR_LOG("MySQL set character set error:");
             mysql_close(mysql);
             return NULL;
         }
-        INF_LOG("MySQL init success");
+
+        INF_LOG("MySQL connection success");
+        std::cout << "MySQL connection success" << std::endl;
         return mysql;
     }
 
@@ -92,10 +89,20 @@ public:
     // 执行mysql语句
     static bool MySQL_Execute(MYSQL* mysql, const std::string &sql)
     {
-        int ret = mysql_query(mysql, sql.c_str());
-        if (ret != 0)
+        // 打印SQL语句以便调试
+        DBG_LOG("SQL: %s", sql.c_str());
+
+        // 检查数据库连接
+        if (mysql_ping(mysql) != 0)
         {
-            // Log::LogMessage(ERROR, "execute error: %s SQL: %s", mysql_error(mysql), sql.c_str());
+            ERR_LOG("MySQL connection lost: %s", mysql_error(mysql));
+            return false;
+        }
+
+        // 执行SQL语句
+        if (mysql_query(mysql, sql.c_str()) != 0)
+        {
+            ERR_LOG("Execute SQL error: %s", mysql_error(mysql));
             return false;
         }
         return true;

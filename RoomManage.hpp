@@ -28,6 +28,8 @@ public:
           _UserTable(UserTable),
           _OnlineUser(OnlineUser)
     {
+        INF_LOG("RoomManage init success");
+        std::cout << "RoomManage init success" << std::endl;
         // Log::LogMessage(INFO, "RoomManage init success");
     }
     ~RoomManage()
@@ -116,11 +118,6 @@ public:
         return;
     }
 
-    
-
 };
-
-
-
 
 #endif // _ROOM_MANAGE_HPP_
