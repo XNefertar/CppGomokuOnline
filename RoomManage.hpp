@@ -42,6 +42,7 @@ public:
         // 校验用户是否在线
         if(!_OnlineUser->IsInGameHall(uid1) || !_OnlineUser->IsInGameHall(uid2))
         {
+            ERR_LOG("User is not online");
             // Log::LogMessage(ERROR, "User is not online");
             return nullptr;
         }

@@ -42,7 +42,7 @@ private:
     uint64_t     _BlackId;           // 黑棋玩家ID
     uint64_t     _WinnerId;          // 胜利玩家ID
     std::mutex   _Mutex;             // 互斥锁
-    UserTable   *_UserTable;        // 用户列表
+    UserTable    *_UserTable;        // 用户列表
     OnlineManage *_OnlineUser;       // 在线管理类
 
     std::vector<std::vector<int>> _Board; // 棋盘
@@ -147,6 +147,7 @@ public:
             resp["Result"] = "true";
             resp["Reason"] = "white player is offline";
             resp["Winner"] = (Json::UInt64)_BlackId;
+            ERR_LOG("white player is offline");
             return resp;
         }
         if(!_OnlineUser->IsInGameRoom(_BlackId))
@@ -154,6 +155,7 @@ public:
             resp["Result"] = "true";
             resp["Reason"] = "black player is offline";
             resp["Winner"] = (Json::UInt64)_WhiteId;
+            ERR_LOG("black player is offline");
             return resp;
         }
 
