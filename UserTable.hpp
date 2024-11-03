@@ -176,12 +176,9 @@ public:
     bool SelectByUID(int id, Json::Value &user)
     {
         char sql[4096] = {0};
-        DBG_LOG("Select User");
-        DBG_LOG("id = %d", id);
         sprintf(sql, SELECT_BY_ID, id);
 
         DBG_LOG("sql = %s", sql);
-        DBG_LOG("id = %d", id);
         MYSQL_RES *res = nullptr;
         {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -191,7 +188,7 @@ public:
                 // Log::LogMessage(ERROR, "Select user error: %s", mysql_error(_mysql));
                 return false;
             }
-            DBG_LOG("Select user success");
+            // DBG_LOG("Select user success");
             res = mysql_store_result(_mysql);
             if(res == NULL)
             {
@@ -199,7 +196,7 @@ public:
                 // Log::LogMessage(ERROR, "Select user error: %s", mysql_error(_mysql));
                 return false;
             }
-            DBG_LOG("Store user information success");
+            // DBG_LOG("Store user information success");
         }
         int RowNum = mysql_num_rows(res);
         if(RowNum != 1)
@@ -210,12 +207,6 @@ public:
         }
         MYSQL_ROW row = mysql_fetch_row(res);
         
-        DBG_LOG("Fetch user information success");
-        for(int i = 0; i < mysql_num_fields(res); i++)
-        {
-            DBG_LOG("row[%d] = %s", i, row[i]);
-        }
-
         user["id"] = (Json::UInt64)id;
         user["username"] = row[1];
         user["score"] = (Json::UInt64)std::stol(row[2]);
@@ -228,9 +219,6 @@ public:
     // 通过用户名获取用户信息
     bool SelectByName(const std::string UserName, Json::Value &user)
     {
-        DBG_LOG("Select By Name.");
-        DBG_LOG("UserName = %s", UserName.c_str());
-
         char sql[4096] = {0};
         sprintf(sql, SELECT_BY_NAME, UserName.c_str());
 
@@ -244,7 +232,7 @@ public:
                 // Log::LogMessage(ERROR, "Select user error: %s", mysql_error(_mysql));
                 return false;
             }
-            DBG_LOG("Select user success");
+            // DBG_LOG("Select user success");
             res = mysql_store_result(_mysql);
             if(res == NULL)
             {
@@ -252,7 +240,7 @@ public:
                 // Log::LogMessage(ERROR, "Select user error: %s", mysql_error(_mysql));
                 return false;
             }
-            DBG_LOG("Store user information success");
+            // DBG_LOG("Store user information success");
         }
         int RowNum = mysql_num_rows(res);
         if(RowNum != 1)
@@ -268,10 +256,7 @@ public:
         //     // Log::LogMessage(ERROR, "Select user error: %s", mysql_error(_mysql));
         //     return false;
         // }
-        DBG_LOG("Fetch user information success");
-        DBG_LOG("ID : row[0] = %s", row[0]);
         user["id"] = (Json::UInt64)std::stol(row[0]);
-        DBG_LOG("user[id] = %d", user["id"].asUInt64());
         user["username"] = UserName;
         user["score"] = (Json::UInt64)std::stol(row[1]);
         user["total_count"] = std::stoi(row[2]);
@@ -293,7 +278,6 @@ public:
         if(!MySQL::MySQL_Execute(_mysql, sql))
         {
             ERR_LOG("Update user error");
-            // Log::LogMessage(ERROR, "Update user error: %s", mysql_error(_mysql));
             return false;
         }
         return true;
@@ -308,7 +292,6 @@ public:
         if(!MySQL::MySQL_Execute(_mysql, sql))
         {
             ERR_LOG("Update user error");
-            // Log::LogMessage(ERROR, "Update user error: %s", mysql_error(_mysql));
             return false;
         }
         return true;

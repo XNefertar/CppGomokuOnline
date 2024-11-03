@@ -8,17 +8,17 @@
 #include "UserTable.hpp"
 #include "OnlineManage.hpp"
 
-#define LEVEL_NORMAL 0
-#define LEVEL_HIGH   1
-#define LEVEL_SUPER  2
+#define LEVEL_NORMAL 1
+#define LEVEL_HIGH   2
+#define LEVEL_SUPER  3
 #define LEVEL_TYPE   int
 
 #define MAPPING_TO_LEVEL(LEVEL_SCORE, LEVEL) do{\
-    if(LEVEL_SCORE < 1000)\
+    if(LEVEL_SCORE <= 1000)\
     {\
         LEVEL = LEVEL_NORMAL;\
     }\
-    else if(LEVEL_SCORE < 2000 && LEVEL_SCORE >= 1000)\
+    else if(LEVEL_SCORE < 2000 && LEVEL_SCORE > 1000)\
     {\
         LEVEL = LEVEL_HIGH;\
     }\
@@ -72,23 +72,31 @@ public:
         Json::Value user;
         if (!_UserTable->SelectByUID(uid, user))
         {
+            ERR_LOG("Failed to select user by UID: %llu", uid);
             return;
         }
         LEVEL_TYPE score = user["score"].asInt();
         LEVEL_TYPE level = 0;
         MAPPING_TO_LEVEL(score, level);
+
+        DBG_LOG("User UID: %llu, Score: %d, Level: %d", uid, score, level);
+
         switch (level)
         {
-        case 0:
-            _QueueNormal.Push(uid);
-            break;
         case 1:
-            _QueueHigh.Push(uid);
+            _QueueNormal.Push(uid);
+            INF_LOG("User UID: %llu added to Normal Queue", uid);
             break;
         case 2:
+            _QueueHigh.Push(uid);
+            INF_LOG("User UID: %llu added to High Queue", uid);
+            break;
+        case 3:
             _QueueSuper.Push(uid);
+            INF_LOG("User UID: %llu added to Super Queue", uid);
             break;
         default:
+            ERR_LOG("Invalid level: %d for user UID: %llu", level, uid);
             break;
         }
     }
@@ -98,6 +106,7 @@ public:
         Json::Value user;
         if (!_UserTable->SelectByUID(uid, user))
         {
+            ERR_LOG("Select user error");
             return false;
         }
         LEVEL_TYPE score = user["score"].asInt();
@@ -126,10 +135,18 @@ private:
     {
         while (1)
         {
+            if (!mQueue.IsEmpty())
+            {
+                DBG_LOG("Queue Size: %d", mQueue.Size());
+                mQueue.Print();
+            }
+
             while (mQueue.Size() < 2)
             {
                 mQueue.WaitThread();
             }
+
+            DBG_LOG("mQueue Size: %d", mQueue.Size());
 
             uint64_t uid1, uid2;
             bool ret = mQueue.Pop(uid1);
@@ -140,14 +157,17 @@ private:
             ret = mQueue.Pop(uid2);
             if (ret == false)
             {
+                ERR_LOG("Pop uid2 error");
                 this->AddMatch(uid1);
                 continue;
             }
+
+            DBG_LOG("Match Success: uid1: %llu, uid2: %llu", uid1, uid2);
             // 如果匹配成功，通知双方玩家
             // 如果某一方掉线，将队列中的下一位玩家加入房间
             wsserver_t::connection_ptr WebConPtr1;
             _OnlineUser->GetGameHallConnection(uid1, WebConPtr1);
-            if (WebConPtr1 == nullptr)
+            if (WebConPtr1.get() == nullptr)
             {
                 this->AddMatch(uid2);
                 continue;
@@ -155,7 +175,7 @@ private:
 
             wsserver_t::connection_ptr WebConPtr2;
             _OnlineUser->GetGameHallConnection(uid2, WebConPtr2);
-            if (WebConPtr2 != nullptr)
+            if (WebConPtr2.get() == nullptr)
             {
                 this->AddMatch(uid1);
                 continue;
@@ -163,7 +183,7 @@ private:
 
             // ???
             RoomPtr room = _RoomManage->CreateRoom(uid1, uid2);
-            if (room == nullptr)
+            if (room.get() == nullptr)
             {   
                 this->AddMatch(uid1);
                 this->AddMatch(uid2);
@@ -175,7 +195,6 @@ private:
             resp["RoomID"] = room->GetRoomId();
             resp["OpType"] = "MatchSuccess";
             resp["Result"] = "true";
-            resp["Reason"] = "Match success";
             std::string str;
             JsonCpp::serialize(resp, str);
             WebConPtr1->send(str);

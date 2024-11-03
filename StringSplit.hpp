@@ -33,11 +33,6 @@ public:
             output.push_back(input.substr(start, pos - start));
             start = pos + split_char.size();
         }
-        DBG_LOG("Split size = %ld", output.size());
-        for(auto it : output)
-        {
-            DBG_LOG("Split it = %s", it.c_str());
-        }
         return output.size();
     }
 };

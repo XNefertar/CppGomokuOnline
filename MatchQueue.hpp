@@ -4,7 +4,7 @@
 #define QUEUE_SIZE_TYPE int
 #include <queue>
 #include <condition_variable>
-
+#include "Logger.hpp"
 template<class T>
 class MatchQueue
 {
@@ -43,7 +43,7 @@ public:
     {
         std::lock_guard<std::mutex> lock(_Mutex);
         _Queue.push(t);
-        _Cond.notify_one();
+        _Cond.notify_all();
     }
 
     ValueType Pop()
@@ -63,11 +63,12 @@ public:
         std::unique_lock<std::mutex> lock(_Mutex);
         if(_Queue.empty())
         {
+            ERR_LOG("Queue is empty");
             return false;
         }
-        ValueType t = _Queue.front();
-        data = t;
+        data = _Queue.front();
         _Queue.pop();
+        DBG_LOG("Pop Data: %d", data);
         return true;
     }
 
@@ -84,6 +85,25 @@ public:
             _Queue.pop();
         }
         _Queue = tmp;
+    }
+
+    void Print()
+    {
+        std::lock_guard<std::mutex> lock(_Mutex);
+        while(!_Queue.empty())
+        {
+            INF_LOG("Queue Data: %d", _Queue.front());
+            _Queue.pop();
+        }
+    }
+
+    void Clear()
+    {
+        std::lock_guard<std::mutex> lock(_Mutex);
+        while(!_Queue.empty())
+        {
+            _Queue.pop();
+        }
     }
 
 

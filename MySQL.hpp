@@ -89,8 +89,6 @@ public:
     // 执行mysql语句
     static bool MySQL_Execute(MYSQL* mysql, const std::string &sql)
     {
-        // 打印SQL语句以便调试
-        DBG_LOG("SQL: %s", sql.c_str());
 
         // 检查数据库连接
         if (mysql_ping(mysql) != 0)

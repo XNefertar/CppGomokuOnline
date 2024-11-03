@@ -45,7 +45,7 @@
             } else {
                 //2. 正在匹配中的状态下点击按钮，发送停止对战匹配请求
                 var req_json = {
-                    OpType: "MatchStop"
+                    OpType: "MatchCancel"
                 }
                 ws_hdl.send(JSON.stringify(req_json));
             }
@@ -99,7 +99,7 @@
                 button_flag = "start";
                 be.innerHTML = "匹配中....点击按钮停止匹配!";
                 return;
-            } else if (rsp_json["OpType"] == "MatchStop") {
+            } else if (rsp_json["OpType"] == "MatchCancel") {
                 console.log("玩家已经移除匹配队列");
                 button_flag = "stop";
                 be.innerHTML = "开始匹配";
