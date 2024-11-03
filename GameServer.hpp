@@ -146,8 +146,8 @@ private:
         DBG_LOG("Set Session Expire Time Success");
         // 设置响应头部
         std::string cookie_ssid = "SSID=" + std::to_string(ssp->GetSessionID());
-        con->append_header("Set-Cookie", cookie_ssid);
-        DBG_LOG("con->append_header Success : %s", con->get_request().get_header("Set-Cookie").c_str());
+        con->append_header("Cookie", cookie_ssid);
+        DBG_LOG("con->append_header Success : %s", con->get_request().get_header("Cookie").c_str());
         INF_LOG("Login Success");
         return HttpResp(con, true, websocketpp::http::status_code::ok, "登录成功");
     }
@@ -294,7 +294,7 @@ private:
         }
 
         std::string sessionID;
-        if (!GetCookieVal(cookie, "SessionID", sessionID))
+        if (!GetCookieVal(cookie, "SSID", sessionID))
         {
             ErrorResp["OpType"] = "HallReady";
             ErrorResp["Result"] = "false";
@@ -327,7 +327,7 @@ private:
             ERR_LOG("Get Session Error");
             return;
         }
-
+        DBG_LOG("Get Session Success");
         // 判断当前客户端是否重复登录
         if (_OnlineManage.IsInGameHall(ssp->GetUID()) || _OnlineManage.IsInGameRoom(ssp->GetUID()))
         {
@@ -338,6 +338,7 @@ private:
             ERR_LOG("Already In GameHall");
             return;
         }
+        DBG_LOG("Not In GameHall");
 
         // 将当前客户端以及连接加入游戏大厅
         _OnlineManage.EnterGameHall(ssp->GetUID(), con);
