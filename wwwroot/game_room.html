@@ -35,7 +35,7 @@
         let chess = document.getElementById('chess');
         let context = chess.getContext('2d');//获取chess控件的2d画布
         
-        var ws_url = "ws://" + location.host + "/room";
+        var ws_url = "ws://" + location.host + "/gameroom";
         var ws_hdl = new WebSocket(ws_url);
 
         var room_info = null;//用于保存房间信息 

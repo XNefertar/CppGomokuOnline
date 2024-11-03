@@ -30,7 +30,7 @@
 #define INSERT_USER      "INSERT INTO user (username, password, score, total_count, win_count) VALUES ('%s', SHA2('%s', 256), 1000, 0, 0);"
 #define DELETE_USER      "delete from user where username='%s';"
 #define SELECT_BY_NAME   "select id, score, total_count, win_count from user where username='%s';"
-#define SELECT_BY_ID     "select id, score, total_count, win_count from user where id=%d;"
+#define SELECT_BY_ID     "select id, username, score, total_count, win_count from user where id=%d;"
 #define UPDATE_WIN_USER  "update user set score=score+30, total_count=total_count+1, win_count=win_count+1 where id=%d;"
 #define UPDATE_LOSE_USER "update user set score=score-10, total_count=total_count+1 where id=%d;"
 
@@ -211,11 +211,16 @@ public:
         MYSQL_ROW row = mysql_fetch_row(res);
         
         DBG_LOG("Fetch user information success");
+        for(int i = 0; i < mysql_num_fields(res); i++)
+        {
+            DBG_LOG("row[%d] = %s", i, row[i]);
+        }
+
         user["id"] = (Json::UInt64)id;
-        user["username"] = row[0];
-        user["score"] = (Json::UInt64)std::stol(row[1]);
-        user["total_count"] = std::stoi(row[2]);
-        user["win_count"] = std::stoi(row[3]);
+        user["username"] = row[1];
+        user["score"] = (Json::UInt64)std::stol(row[2]);
+        user["total_count"] = std::stoi(row[3]);
+        user["win_count"] = std::stoi(row[4]);
         mysql_free_result(res);
         return true;
     }

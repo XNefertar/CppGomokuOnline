@@ -362,6 +362,7 @@ private:
             ERR_LOG("Get Session Error");
             return;
         }
+        DBG_LOG("Get Session Success");
 
         // 判断当前客户端是否重复登录
         if (_OnlineManage.IsInGameHall(ssp->GetUID()) || _OnlineManage.IsInGameRoom(ssp->GetUID()))
@@ -373,6 +374,7 @@ private:
             ERR_LOG("Already In GameRoom");
             return;
         }
+        DBG_LOG("Not In GameRoom");
 
         // 判断当前用户是否已经创建好房间
         RoomPtr room = _RoomManage.GetRoomByUID(ssp->GetUID());
@@ -388,6 +390,7 @@ private:
 
         // 将当前客户端以及连接加入游戏房间
         _OnlineManage.EnterGameRoom(ssp->GetUID(), con);
+        DBG_LOG("Enter GameRoom Success");
 
         // 返回成功信息
         resp["OpType"] = "RoomReady";
@@ -489,6 +492,7 @@ private:
             ERR_LOG("Deserialize Error");
             return;
         }
+        DBG_LOG("Deserialize Success");
 
         if (req["OpType"].isString() && req["OpType"].asString() == "MatchStart")
         {
@@ -517,6 +521,7 @@ private:
             ERR_LOG("Unknown Request");
             return;
         }
+        DBG_LOG("Success MatchStart");
     }
 
     void WebsocketMessageGameRoom(wsserver_t::connection_ptr con, wsserver_t::message_ptr msg)
