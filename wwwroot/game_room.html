@@ -117,7 +117,7 @@
         }
         function send_chess(r, c) {
             var chess_info = {
-                Optype : "PutChess",
+                OpType : "PutChess",
                 room_id: room_info.room_id,
                 uid: room_info.uid,
                 row: r,
@@ -152,12 +152,12 @@
             //  1. 将房间信息保存起来
             var info = JSON.parse(evt.data);
             console.log(JSON.stringify(info));
-            if (info.Optype == "RoomReady") {
+            if (info.OpType == "RoomReady") {
                 room_info = info;
                 is_me = room_info.uid == room_info.white_id ? true : false;
                 set_screen(is_me);
                 initGame();
-            }else if (info.Optype == "PutChess"){
+            }else if (info.OpType == "PutChess"){
                 console.log("PutChess" + evt.data);
                 //2. 走棋操作
                 //  3. 收到走棋消息，进行棋子绘制
@@ -194,7 +194,7 @@
                     location.replace("/game_hall.html");
                 }
                 chess_area_div.appendChild(button_div);
-            } else if (info.Optype == "Chat") {
+            } else if (info.OpType == "Chat") {
                 //收到一条消息，判断result，如果为true则渲染一条消息到显示框中
                 if(info.result == false) {
                     alert(info.reason);
@@ -220,7 +220,7 @@
         var cb_div = document.getElementById("chat_button");
         cb_div.onclick = function() {
             var send_msg = {
-                Optype : "Chat",
+                OpType : "Chat",
                 room_id : room_info.room_id,
                 uid : room_info.uid,
                 message : document.getElementById("chat_input").value

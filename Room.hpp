@@ -109,6 +109,7 @@ public:
     // 重置棋盘
     ~Room()
     {
+        DBG_LOG("Room %d destroy", _RoomId);
         // Log::LogMessage(INFO, "Room %d destroy", _RoomId);
     }
 
@@ -123,13 +124,13 @@ public:
     // 一系列函数接口用于设置信息
     void AddBlackPlayer(uint64_t id)
     {
-        std::lock_guard<std::mutex> lock(_Mutex);
+        // std::lock_guard<std::mutex> lock(_Mutex);
         _BlackId = id;
         _PlayerNum++;
     }
     void AddWhitePlayer(uint64_t id)
     {
-        std::lock_guard<std::mutex> lock(_Mutex);
+        // std::lock_guard<std::mutex> lock(_Mutex);
         _WhiteId = id;
         _PlayerNum++;
     }
@@ -147,7 +148,7 @@ public:
             resp["Result"] = "true";
             resp["Reason"] = "white player is offline";
             resp["Winner"] = (Json::UInt64)_BlackId;
-            ERR_LOG("white player is offline");
+            INF_LOG("white player is offline");
             return resp;
         }
         if(!_OnlineUser->IsInGameRoom(_BlackId))
@@ -155,7 +156,7 @@ public:
             resp["Result"] = "true";
             resp["Reason"] = "black player is offline";
             resp["Winner"] = (Json::UInt64)_WhiteId;
-            ERR_LOG("black player is offline");
+            INF_LOG("black player is offline");
             return resp;
         }
 
@@ -259,6 +260,7 @@ public:
         }
         else
         {
+            DBG_LOG("White player failed to send message");
             // Log::LogMessage(ERROR, "White player failed to send message");
         }
 
@@ -270,6 +272,7 @@ public:
         }
         else
         {
+            DBG_LOG("Black player failed to send message");
             // Log::LogMessage(ERROR, "Black player failed to send message");
         }
     }
@@ -281,9 +284,10 @@ public:
         // 判断房间ID是否合法
         if(RoomID != _RoomId)
         {
-            resp["OpType"] = req["OpType"];
+            resp["OpType"] = req["OpType"].asString();
             resp["Result"] = "false";
             resp["Reason"] = "RoomID is error";
+            ERR_LOG("RoomID is error");
             return BroadCast(resp);
         }
 

@@ -24,12 +24,11 @@ private:
 
 public:
     RoomManage(UserTable *UserTable, OnlineManage *OnlineUser)
-        : _NextRID(0),
+        : _NextRID(1),
           _UserTable(UserTable),
           _OnlineUser(OnlineUser)
     {
-        INF_LOG("RoomManage init success");
-        std::cout << "RoomManage init success" << std::endl;
+        DBG_LOG("RoomManage init success");
         // Log::LogMessage(INFO, "RoomManage init success");
     }
     ~RoomManage()
@@ -44,20 +43,19 @@ public:
         {
             ERR_LOG("User is not online");
             // Log::LogMessage(ERROR, "User is not online");
-            return nullptr;
+            return RoomPtr();
         }
 
         std::lock_guard<std::mutex> lock(_Mutex);
-        RoomPtr room = std::make_shared<Room>(_NextRID, _UserTable, _OnlineUser);
+        RoomPtr room(new Room(_NextRID, _UserTable, _OnlineUser));
         room->AddWhitePlayer(uid1);
         room->AddBlackPlayer(uid2);
-        _RoomMap.insert(std::make_pair(room->GetRoomId(), room));
-        _Users.insert(std::make_pair(uid1, room->GetRoomId()));
-        _Users.insert(std::make_pair(uid2, room->GetRoomId()));
+        _RoomMap.insert(std::make_pair(_NextRID, room));
+        _Users.insert(std::make_pair(uid1, _NextRID));
+        _Users.insert(std::make_pair(uid2, _NextRID));
         ++_NextRID;
 
-        std::cout << "Create Room " << room->GetRoomId() << " Success" << std::endl;
-
+        DBG_LOG("Create Room Success");
         return room;
     }
 
@@ -67,7 +65,7 @@ public:
         auto iter = _RoomMap.find(rid);
         if(iter == _RoomMap.end())
         {
-            return nullptr;
+            return RoomPtr();
         }
         return iter->second;
     }
@@ -78,14 +76,14 @@ public:
         auto UserIter = _Users.find(uid);
         if(UserIter == _Users.end())
         {
-            return nullptr;
+            return RoomPtr();
         }
         // 增加指针正确性校验
         // return GetRoomByRID(iter->second);
         auto RoomIter = _RoomMap.find(UserIter->second);
-        if(RoomIter == nullptr)
+        if(RoomIter == _RoomMap.end())
         {
-            return nullptr;
+            return RoomPtr();
         }
         return RoomIter->second;
     }

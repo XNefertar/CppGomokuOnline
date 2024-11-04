@@ -527,10 +527,11 @@ private:
             resp["OpType"] = "Unknown";
             resp["Result"] = "false";
             resp["Reason"] = "Deserialize Error";
-            WebsocketResp(con, resp);
             ERR_LOG("Deserialize Error");
-            return;
+            return WebsocketResp(con, resp);
         }
+
+        DBG_LOG("Receive Request: %s", body.c_str());
 
         return room->HandlerRequest(req);
     }
