@@ -255,7 +255,7 @@ public:
         // 2. 广播
         wsserver_t::connection_ptr WebConPtrWhite;
         _OnlineUser->GetGameRoomConnection(_WhiteId, WebConPtrWhite);
-        if(WebConPtrWhite != nullptr)
+        if(WebConPtrWhite.get() != nullptr)
         {
             WebConPtrWhite->send(str);
         }
@@ -267,7 +267,7 @@ public:
 
         wsserver_t::connection_ptr WebConPtrBlack;
         _OnlineUser->GetGameRoomConnection(_BlackId, WebConPtrBlack);
-        if(WebConPtrBlack != nullptr)
+        if(WebConPtrBlack.get() != nullptr)
         {
             WebConPtrBlack->send(str);
         }

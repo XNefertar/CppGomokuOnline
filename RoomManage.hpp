@@ -24,7 +24,7 @@ private:
 
 public:
     RoomManage(UserTable *UserTable, OnlineManage *OnlineUser)
-        : _NextRID(1),
+        : _NextRID(0),
           _UserTable(UserTable),
           _OnlineUser(OnlineUser)
     {

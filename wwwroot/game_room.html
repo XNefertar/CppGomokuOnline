@@ -38,7 +38,7 @@
         var ws_url = "ws://" + location.host + "/gameroom";
         var ws_hdl = new WebSocket(ws_url);
 
-        var room_info = null;//用于保存房间信息 
+        var RoomInfo = null;//用于保存房间信息 
         var is_me;
 
         function initGame() {
@@ -118,8 +118,8 @@
         function send_chess(r, c) {
             var chess_info = {
                 OpType : "PutChess",
-                room_id: room_info.room_id,
-                uid: room_info.uid,
+                RoomID: RoomInfo.RoomID,
+                UID: RoomInfo.UID,
                 row: r,
                 col: c
             };
@@ -150,38 +150,38 @@
         ws_hdl.onmessage = function(evt) {
             //1. 在收到room_ready之后进行房间的初始化
             //  1. 将房间信息保存起来
-            var info = JSON.parse(evt.data);
-            console.log(JSON.stringify(info));
-            if (info.OpType == "RoomReady") {
-                room_info = info;
-                is_me = room_info.uid == room_info.white_id ? true : false;
+            var Info = JSON.parse(evt.data);
+            console.log(JSON.stringify(Info));
+            if (Info.OpType == "RoomReady") {
+                RoomInfo = Info;
+                is_me = RoomInfo.UID == RoomInfo.WhiteID ? true : false;
                 set_screen(is_me);
                 initGame();
-            }else if (info.OpType == "PutChess"){
+            }else if (Info.OpType == "PutChess"){
                 console.log("PutChess" + evt.data);
                 //2. 走棋操作
                 //  3. 收到走棋消息，进行棋子绘制
-                if (info.result == false) {
-                    alert(info.reason);
+                if (Info.Result == false) {
+                    alert(Info.reason);
                     return;
                 }
                 //当前走棋的用户id，与我自己的用户id相同，就是我自己走棋，走棋之后，就轮到对方了
-                is_me = info.uid == room_info.uid ? false : true;
+                is_me = Info.UID == RoomInfo.UID ? false : true;
                 //绘制棋子的颜色，应该根据当前下棋角色的颜色确定
-                isWhite = info.uid == room_info.white_id ? true : false;
+                isWhite = Info.UID == RoomInfo.WhiteID ? true : false;
                 //绘制棋子
-                if (info.row != -1 && info.col != -1){
-                    oneStep(info.col, info.row, isWhite);
+                if (Info.Row != -1 && Info.Col != -1){
+                    oneStep(Info.Col, Info.Row, isWhite);
                     //设置棋盘信息
-                    chessBoard[info.row][info.col] = 1;
+                    chessBoard[Info.Row][Info.Col] = 1;
                 }
                 //是否有胜利者
-                if (info.winner == 0) {
+                if (Info.Winner == 0) {
                     return;
                 }
                 var screen_div = document.getElementById("screen");
-                if (room_info.uid == info.winner) {
-                    screen_div.innerHTML = info.reason;
+                if (RoomInfo.UID == Info.Winner) {
+                    screen_div.innerHTML = Info.Reason;
                 }else {
                     screen_div.innerHTML = "你输了";
                 }
@@ -194,15 +194,15 @@
                     location.replace("/game_hall.html");
                 }
                 chess_area_div.appendChild(button_div);
-            } else if (info.OpType == "Chat") {
+            } else if (Info.OpType == "Chat") {
                 //收到一条消息，判断result，如果为true则渲染一条消息到显示框中
-                if(info.result == false) {
-                    alert(info.reason);
+                if(Info.result == false) {
+                    alert(Info.reason);
                     return;
                 }
                 var msg_div = document.createElement("p");
-                msg_div.innerHTML = info.message;
-                if (info.uid == room_info.uid) {
+                msg_div.innerHTML = Info.Message;
+                if (Info.UID == RoomInfo.UID) {
                     msg_div.setAttribute("id", "self_msg");
                 }else {
                     msg_div.setAttribute("id", "peer_msg");
@@ -215,15 +215,14 @@
             }
         }
         //3. 聊天动作
-        //  1. 捕捉聊天输入框消息
-        //  2. 给发送按钮添加点击事件，点击俺就的时候，获取到输入框消息，发送给服务器
+        
         var cb_div = document.getElementById("chat_button");
         cb_div.onclick = function() {
             var send_msg = {
                 OpType : "Chat",
-                room_id : room_info.room_id,
-                uid : room_info.uid,
-                message : document.getElementById("chat_input").value
+                RoomID : RoomInfo.RoomID,
+                UID : RoomInfo.UID,
+                Message : document.getElementById("chat_input").value
             };
             ws_hdl.send(JSON.stringify(send_msg));
         }

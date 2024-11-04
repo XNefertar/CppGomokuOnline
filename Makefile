@@ -6,4 +6,4 @@ Game:Game.cc Logger.hpp UserTable.hpp OnlineManage.hpp Room.hpp RoomManage.hpp\
 
 .PHONY:clean
 clean:
-	rm -rf Game log.txt
+	rm -rf Game
