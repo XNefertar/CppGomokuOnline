@@ -18,14 +18,14 @@
 #define ROOM_MAX_SIZE        1024
 #define BOARD_ROW            15
 #define BOARD_COL            15
-#define CHESS_WHITE_COLOR    0
-#define CHESS_BLACK_COLOR    1
+#define CHESS_WHITE_COLOR    1
+#define CHESS_BLACK_COLOR    2
 
 
 typedef enum
 {
-    GAME_START = 0,
-    GAME_OVER,
+    GAME_START,
+    GAME_OVER
 }RoomStatus;
 typedef websocketpp::server<websocketpp::config::asio> webserver;
 typedef webserver::message_ptr message_ptr;
@@ -40,7 +40,6 @@ private:
     RoomStatus   _Status;            // 房间状态
     uint64_t     _WhiteId;           // 白棋玩家ID
     uint64_t     _BlackId;           // 黑棋玩家ID
-    uint64_t     _WinnerId;          // 胜利玩家ID
     std::mutex   _Mutex;             // 互斥锁
     UserTable    *_UserTable;        // 用户列表
     OnlineManage *_OnlineUser;       // 在线管理类
@@ -58,7 +57,9 @@ public:
         int CurRow = row + offsetRow;
         int CurCol = col + offsetCol;
         // 判断当前位置是否越界，并统计相同颜色的棋子个数
-        while(CurRow >= 0 && CurRow < BOARD_ROW && CurCol >= 0 && CurCol < BOARD_COL && _Board[CurRow][CurCol] == color)
+        while (CurRow >= 0 && CurRow < BOARD_ROW &&
+               CurCol >= 0 && CurCol < BOARD_COL &&
+               _Board[CurRow][CurCol] == color)
         {
             count++;
             CurRow += offsetRow;
@@ -67,7 +68,10 @@ public:
         // 换个方向统计
         CurRow = row - offsetRow;
         CurCol = col - offsetCol;
-        while(CurRow >= 0 && CurRow < BOARD_ROW && CurCol >= 0 && CurCol < BOARD_COL && _Board[CurRow][CurCol] == color)
+        while (CurRow >= 0 && CurRow < BOARD_ROW &&
+               CurCol >= 0 &&
+               CurCol < BOARD_COL &&
+               _Board[CurRow][CurCol] == color)
         {
             count++;
             CurRow -= offsetRow;
@@ -80,14 +84,14 @@ public:
     uint64_t CheckWin(int row, int col, int color)
     {
         // 判断各个方向是否出现五子连珠
-        if (five(row, col, 0, 1, color) ||
-            five(row, col, 1, 0, color) ||
-            five(row, col, 1, 1, color) ||
+        if (five(row, col, 0, 1, color)  ||
+            five(row, col, 1, 0, color)  ||
+            five(row, col, -1, 1, color) ||
             five(row, col, 1, -1, color))
         {
             return color == CHESS_WHITE_COLOR ? _WhiteId : _BlackId;
         }
-        return -1;
+        return 0;
     }
 
     // 初始化棋盘
@@ -95,12 +99,10 @@ public:
     Room(uint64_t RoomId, UserTable *UserTable, OnlineManage *OnlineUser)
         : _RoomId(RoomId),
           _Status(GAME_START),
-          _WhiteId(CHESS_WHITE_COLOR),
-          _BlackId(CHESS_BLACK_COLOR),
-          _WinnerId(-1),
+          _PlayerNum(0),
           _UserTable(UserTable),
           _OnlineUser(OnlineUser),
-          _Board(BOARD_ROW, std::vector<int>(BOARD_COL, -1))
+          _Board(BOARD_ROW, std::vector<int>(BOARD_COL, 0))
     {
         std::cout << "Room " << _RoomId << " 初始化完成" << std::endl;
         // Log::LogMessage(INFO, "Room %d init success", _RoomId);
@@ -119,7 +121,6 @@ public:
     uint64_t    GetRoomId()    { return _RoomId; }
     uint64_t    GetWhiteId()   { return _WhiteId; }
     uint64_t    GetBlackId()   { return _BlackId; }
-    uint64_t    GetWinnerId()  { return _WinnerId; }
 
     // 一系列函数接口用于设置信息
     void AddBlackPlayer(uint64_t id)
@@ -281,6 +282,8 @@ public:
     {
         Json::Value resp;
         uint64_t RoomID = req["RoomID"].asUInt64();
+        DBG_LOG("RoomID: %d", RoomID);
+        DBG_LOG("_RoomID: %d", _RoomId);
         // 判断房间ID是否合法
         if(RoomID != _RoomId)
         {
@@ -299,7 +302,7 @@ public:
             if(resp["Result"] == "true")
             {
                 _Status = GAME_OVER;
-                _WinnerId = resp["Winner"].asUInt64();
+                uint64_t _WinnerId = resp["Winner"].asUInt64();
                 _UserTable->UpdateWinUser(_WinnerId);
                 _UserTable->UpdateLoseUser(_WinnerId == _WhiteId ? _BlackId : _WhiteId);
                 _Status = GAME_OVER;

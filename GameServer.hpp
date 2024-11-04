@@ -354,9 +354,8 @@ private:
             resp["OpType"] = "RoomReady";
             resp["Result"] = "false";
             resp["Reason"] = "Already In GameRoom";
-            WebsocketResp(con, resp);
             ERR_LOG("Already In GameRoom");
-            return;
+            return WebsocketResp(con, resp);
         }
 
         // 判断当前用户是否已经创建好房间
@@ -366,22 +365,25 @@ private:
             resp["OpType"] = "RoomReady";
             resp["Result"] = "false";
             resp["Reason"] = "Not In GameRoom";
-            WebsocketResp(con, resp);
             ERR_LOG("Not In GameRoom");
-            return;
+            return WebsocketResp(con, resp);
         }
 
         // 将当前客户端以及连接加入游戏房间
         _OnlineManage.EnterGameRoom(ssp->GetUID(), con);
+        _SessionManage.SetSessionExpireTime(ssp->GetSessionID(), SESSION_FOREVER);
 
         // 返回成功信息
         resp["OpType"] = "RoomReady";
         resp["Result"] = "true";
         resp["Reason"] = "Enter GameRoom Success";
+        resp["RoomID"] = room->GetRoomId();
+        resp["WhiteID"] = room->GetWhiteId();
+        resp["BlackID"] = room->GetBlackId();
+        resp["UID"] = ssp->GetUID();
         WebsocketResp(con, resp);
 
         // 将Session设置为永久存在
-        _SessionManage.SetSessionExpireTime(ssp->GetSessionID(), SESSION_FOREVER);
         INF_LOG("Enter GameRoom Success");
         return;
     }
